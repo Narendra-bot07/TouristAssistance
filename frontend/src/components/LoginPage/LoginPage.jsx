@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, TextField, Button, Container } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
   return (
@@ -22,8 +23,11 @@ const LoginPage = () => {
             variant="outlined"
             sx={{ mb: 3 }}
           />
-          <Button variant="contained" size="large">
+          <Button variant="contained" size="large" sx={{mr : 2}}>
             Login
+          </Button>
+          <Button variant="contained" size="large" component={Link} to="/register">
+            Create an account
           </Button>
         </Box>
       </Box>
