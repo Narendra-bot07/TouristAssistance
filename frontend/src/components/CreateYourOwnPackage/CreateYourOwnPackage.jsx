@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom';
 const CreateYourOwnPackage = () => {
+const navigate = useNavigate();
   const [formData, setFormData] = useState({
     startCountry: '',
     destinationCountry: '',
@@ -52,7 +53,6 @@ const CreateYourOwnPackage = () => {
       return;
     }
 
-    // Format the start and end dates
     const formattedStartDate = formatDate(formData.startDate);
     const formattedEndDate = formatDate(formData.endDate);
 
@@ -83,6 +83,7 @@ const CreateYourOwnPackage = () => {
 
       console.log('Package created successfully:', response.data);
       alert('Your package has been created successfully!');
+      navigate('/itinerary');
     } catch (error) {
       console.error('Error creating package:', error);
       alert('There was an error creating your package. Please try again.');

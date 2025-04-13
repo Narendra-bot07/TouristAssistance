@@ -12,7 +12,7 @@ const Header = () => {
     const email = localStorage.getItem('userEmail');
 
     if (email) {
-      axios.get(`http://localhost:8000/api/get-user/?email=${email}`)
+      axios.get(`http://localhost:8000/api/get_user/?email=${email}`)
         .then(response => {
           if (response.data.status === 'success') {
             setIsLoggedIn(true);
@@ -75,7 +75,6 @@ const Header = () => {
                     <ul className="dropdown-menu dropdown-menu-end shadow">
                       <li><Link className="dropdown-item" to="/profile">View Profile</Link></li>
                       <li><Link className="dropdown-item" to="/my-trips">My Recent Trips</Link></li>
-                      <li><Link className="dropdown-item" to="/suggestions">Suggested Trips</Link></li>
                       <li><hr className="dropdown-divider" /></li>
                       <li><button className="dropdown-item text-danger" onClick={handleLogout}>Logout</button></li>
                     </ul>

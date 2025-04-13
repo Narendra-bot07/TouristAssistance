@@ -9,7 +9,10 @@ import LoginPage from './components/LoginPage/LoginPage';
 import RegistrationPage from './components/RegistrationPage/RegistrationPage';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import ItineraryViewer from './components/ItineraryPage/ItineraryViewer';
+import Profile from './components/ProfileComponent/Profile';
 import "./App.css";
+import RecentTrips from './components/RecentTripsComponents/RecentTrips';
 
 function App() {
   return (
@@ -19,12 +22,16 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path='/itinerary' element={<ItineraryViewer />} />
             <Route path="/package/:id" element={<PackageDetailPage />} />
             <Route path="/packages" element={<PackagesArchivePage />} />
             <Route path="/create-your-own" element={<CreateYourOwnPackage />} />
             <Route path="/about-us" element={<AboutUsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
+            <Route path='/profile' element={<Profile />} />
+            <Route path='/my-trips' element={<RecentTrips />} />
+
           </Routes>
         </main>
         <Footer />

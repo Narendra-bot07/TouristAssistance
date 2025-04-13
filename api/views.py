@@ -7,6 +7,8 @@ from datetime import datetime
 import googlemaps
 import google.generativeai as genai
 import requests
+import json
+import re
 # ✅ Firebase configuration (use your actual working values)
 firebaseConfig = {
     "apiKey": "AIzaSyBvF4sctKkdQFSkkvvDyLKENJMFlaWCWQU",
@@ -23,13 +25,16 @@ firebaseConfig = {
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
 auth = firebase.auth()
-GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s."  # Already in your setup
-GOOGLE_MAPS_API_KEY = "AIzaSyBf7g228DZPB46GCpKufTBV_QpinWBCJp4"  # Already in your setup
+
+# ✅ API Keys
+GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s."
+GOOGLE_MAPS_API_KEY = "AIzaSyBf7g228DZPB46GCpKufTBV_QpinWBCJp4"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
+
 gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
 genai.configure(api_key=GEMINI_API_KEY)
-gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
+
 
 @api_view(['POST'])
 def register_user(request):
@@ -45,8 +50,7 @@ def register_user(request):
         password = data.get('password')
         confirm_password = data.get('confirmPassword')
 
-        # ✅ Check all required fields
-        # 💥 Debug Field Values
+        # ✅ Debug Field Values
         print("[DEBUG] username:", username)
         print("[DEBUG] name:", name)
         print("[DEBUG] email:", email)
@@ -54,13 +58,15 @@ def register_user(request):
         print("[DEBUG] password:", password)
         print("[DEBUG] confirm_password:", confirm_password)
 
-    # ✅ Check all fields are present and not empty
+        # ✅ Check all fields are present and not empty
         required_fields = [username, name, email, phone, password, confirm_password]
         if any(field is None or str(field).strip() == '' for field in required_fields):
             return JsonResponse({"status": "error", "message": "All fields are required"}, status=400)
-    # ✅ Password match check
+
+        # ✅ Password match check
         if password.strip() != confirm_password.strip():
             return JsonResponse({"status": "error", "message": "Passwords do not match"}, status=400)
+
         # ✅ Check if user exists
         users = db.child("users").get()
         if users is not None and users.each() is not None:
@@ -89,6 +95,7 @@ def register_user(request):
         print("[ERROR]", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
+
 @api_view(['POST'])
 def login_user(request):
     print("[DEBUG] Login endpoint hit.")
@@ -115,7 +122,7 @@ def login_user(request):
                     return JsonResponse({
                         "status": "success",
                         "message": "Login successful",
-                        "email": user_data["email"],  # return the actual email
+                        "email": user_data["email"],
                         "name": user_data["name"]
                     }, status=200)
 
@@ -134,21 +141,23 @@ def get_user_by_email(request):
     email = request.GET.get('email')
     if not email:
         return JsonResponse({"status": "error", "message": "Email is required"}, status=400)
-    
+
     try:
         users = db.child("users").get()
 
         if users is None:
             return JsonResponse({"status": "error", "message": "No users found in the database"}, status=404)
-        
+
         for user in users.each():
             data = user.val()
             if data["email"] == email:
                 return JsonResponse({"status": "success", "name": data["name"]}, status=200)
 
         return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
 
 @api_view(['POST'])
 def create_package(request):
@@ -157,75 +166,245 @@ def create_package(request):
     if request.method == 'POST':
         try:
             data = request.data
-            print("[DEBUG] Received data:", data)  # Debug: Log the incoming data
+            print("[DEBUG] Received data:", data)
 
-            # Extract username and packageDetails from request data
             username = data.get('username')
             user_input = data.get('packageDetails')
 
-            # Check if username and package details are provided
             if not all([username, user_input]):
-                print("[DEBUG] Missing username or packageDetails")  # Debug: Log missing fields
+                print("[DEBUG] Missing username or packageDetails")
                 return JsonResponse({"status": "error", "message": "Username and package details are required"}, status=400)
 
-            # Calculate number of days
+            # Date handling
             def fix_year(year): return '20' + year if len(year) == 2 else year
             sd = user_input['startDate'].split('-')
             ed = user_input['endDate'].split('-')
-            print("[DEBUG] Start Date:", sd, "End Date:", ed)  # Debug: Log start and end dates
             sd[2] = fix_year(sd[2])
             ed[2] = fix_year(ed[2])
             user_input['numDays'] = (datetime.strptime('-'.join(ed), "%d-%m-%Y") - datetime.strptime('-'.join(sd), "%d-%m-%Y")).days
-            print("[DEBUG] Calculated number of days:", user_input['numDays'])  # Debug: Log calculated number of days
 
-            # Build Gemini prompt
+            # 🌍 Updated Prompt for Gemini
             prompt = f"""
-            Create a detailed travel itinerary with:
-            - Starting Point: {user_input['startplace']}
-            - Destination: {user_input['destinationplace']}
-            - Dates: {user_input['startDate']} to {user_input['endDate']}
-            - Number of People: {user_input['numPeople']}
-            - Number of Days: {user_input['numDays']}
-            - Preferences: {', '.join(user_input['preferences'])}
-            - Goals: {', '.join(user_input['goals'])}
-            - Dietary Restrictions: {user_input['diet']}
-            - Budget: {user_input['budget']}
+Create a detailed travel itinerary in JSON format with the following user-provided details:
 
-            Include daily activities, restaurants, travel tips, transport modes, and cost estimates.
-            Return everything as a detailed JSON itinerary.
-            """
+- Starting point: {user_input['startplace']}
+- Destination: {user_input['destinationplace']}
+- Dates: {user_input['startDate']} to {user_input['endDate']}
+- Number of people: {user_input['numPeople']}
+- Preferences: {user_input['preferences']}
+- Goals: {user_input['goals']}
+- Dietary restrictions: {user_input['diet']}
+- Budget: {user_input['budget']}
+- Source to destination transport: {user_input.get('source_to_dest_transport', 'N/A')}
+- Local transport type: {user_input.get('local_transport_type', 'N/A')}
+- Stay preferences: {user_input.get('stay_preferences', 'N/A')}
 
-            print("[DEBUG] Gemini prompt created:", prompt)  # Debug: Log generated prompt for Gemini
+Instructions:
+1. Return ONLY valid JSON. Do NOT include any markdown or code formatting.
+2. For each day of the trip, include the following exact format:
+3. Based on the destination change the type of currency.
+[
+  {{
+    "day": number,
+    "date": string,
+    "location": string,
+    "activities": [
+      {{
+        "description": string,
+        "type": string,
+        "duration": string,
+        "notes": string
+      }}
+    ],
+    "transport": [
+      {{
+        "mode": string,
+        "estimatedCost": number,
+        "currency": string,
+        "details": string
+      }}
+    ],
+    "accommodation": {{
+      "name": string,
+      "type": string,
+      "estimatedCost": number,
+      "currency": string,
+      "notes": string
+    }},
+    "meals": [
+      {{
+        "type": string,
+        "description": string,
+        "cost": number,
+        "currency": string,
+        "notes": string
+      }}
+    ],
+    "costEstimate": number,
+    "notes": string
+  }}
+]
 
+3. Make the itinerary realistic and appropriate for a {user_input['budget']} budget.
+4. Recommend culturally appropriate, location-specific activities and food.
+5. Include estimated costs wherever possible.
+6. Respond ONLY with valid JSON following this exact structure.
+"""
+
+            print("[DEBUG] Sending prompt to Gemini...")
             gemini_response = model.generate_content(prompt)
-            itinerary = gemini_response.text if gemini_response.text else "No itinerary generated"
-            print("[DEBUG] Gemini response:", itinerary)  # Debug: Log Gemini response
 
-            # Push to Firebase using username instead of email
+            # Extract and clean the response
+            response_text = gemini_response.text
+            clean_response = response_text.replace('```json', '').replace('```', '').strip()
+
+            # Parse to validate it's proper JSON
+            itinerary = json.loads(clean_response)
+            print("[DEBUG] Successfully parsed itinerary:", itinerary)
+
+            # Save to Firebase
             users = db.child("users").get()
             if users is None:
-                print("[DEBUG] No users found in Firebase")  # Debug: Log if no users are found
                 return JsonResponse({"status": "error", "message": "No users found"}, status=404)
 
-            print("[DEBUG] Users found in Firebase:", users)  # Debug: Log users data
             for user in users.each():
                 user_data = user.val()
                 if user_data["username"] == username:
-                    print("[DEBUG] Found matching user:", user_data)  # Debug: Log the user that matches
                     user_packages = user_data.get("packages", [])
                     user_packages.append({
                         "input": user_input,
                         "itinerary": itinerary
                     })
                     db.child("users").child(user.key()).update({"packages": user_packages})
-                    print("[DEBUG] Gemini-based itinerary stored in Firebase.")  # Debug: Log success
-                    return JsonResponse({"status": "success", "message": "Package created with Gemini itinerary"}, status=201)
+                    return JsonResponse({
+                        "status": "success",
+                        "packageDetails": user_input,
+                        "itinerary": itinerary
+                    }, status=201)
 
-            print("[DEBUG] User not found in Firebase")  # Debug: Log if user is not found
             return JsonResponse({"status": "error", "message": "User not found"}, status=404)
 
+        except json.JSONDecodeError as e:
+            print("[ERROR] Failed to parse Gemini response:", e)
+            print("[DEBUG] Raw response:", gemini_response.text if 'gemini_response' in locals() else 'N/A')
+            return JsonResponse({
+                "status": "error", 
+                "message": "Failed to parse itinerary",
+                "raw_response": gemini_response.text if 'gemini_response' in locals() else 'N/A'
+            }, status=500)
+
         except Exception as e:
-            print("[ERROR] Exception occurred:", str(e))  # Debug: Log any exception that occurs
+            print("[ERROR] Exception occurred:", str(e))
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
+
+@api_view(['GET'])
+def get_latest_itinerary(request, username):
+    try:
+        # Validate input
+        if not username or not isinstance(username, str):
+            return JsonResponse({
+                "status": "error",
+                "message": "Invalid username provided"
+            }, status=400)
+
+        # Fetch all users
+        users = db.child("users").get()
+        if not users:
+            return JsonResponse({
+                "status": "error",
+                "message": "No users found in system"
+            }, status=404)
+
+        # Find user by username
+        user_data = None
+        for user in users.each():
+            if user.val().get("username") == username:
+                user_data = user.val()
+                break
+
+        if not user_data:
+            return JsonResponse({
+                "status": "error",
+                "message": "User not found"
+            }, status=404)
+
+        # Get packages list
+        packages = user_data.get("packages", [])
+        if not packages:
+            return JsonResponse({
+                "status": "error",
+                "message": "No itineraries found for this user"
+            }, status=404)
+
+        # Get latest package based on index
+        latest_package = packages[-1]
+
+        # Parse itinerary only if it's a string
+        itinerary = latest_package.get("itinerary")
+        if isinstance(itinerary, str):
+            try:
+                cleaned_str = itinerary.replace('```json', '').replace('```', '').strip()
+                parsed_itinerary = json.loads(cleaned_str)
+            except Exception:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Itinerary parsing failed. Invalid format."
+                }, status=500)
+        else:
+            parsed_itinerary = itinerary
+
+        return JsonResponse({
+            "status": "success",
+            "packageDetails": latest_package.get("input"),
+            "itinerary": parsed_itinerary
+        }, status=200)
+
+    except Exception as e:
+        print("[ERROR]", str(e))
+        return JsonResponse({
+            "status": "error",
+            "message": "An internal server error occurred"
+        }, status=500)
+@api_view(['GET'])
+def get_recent_packages(request, username):
+    try:
+        # Validate username
+        if not username or not isinstance(username, str):
+            return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=400)
+
+        # Fetch the user from Firebase
+        users = db.child("users").get()
+        if not users:
+            return JsonResponse({"status": "error", "message": "No users found in system"}, status=404)
+
+        # Find the user
+        user_data = None
+        for user in users.each():
+            if user.val().get("username") == username:
+                user_data = user.val()
+                break
+
+        if not user_data:
+            return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+
+        # Fetch the packages for the user
+        packages = user_data.get("packages", [])
+        if not packages:
+            return JsonResponse({"status": "error", "message": "No packages found for this user"}, status=404)
+
+        # Sort packages based on the index (assuming 'index' is a field in each package)
+        sorted_packages = sorted(packages, key=lambda x: x.get("index", 0), reverse=True)
+
+        # Return the recent packages (you can choose how many recent packages you want to return)
+        recent_packages = sorted_packages[:5]  # Example: Fetch the 5 most recent packages
+
+        return JsonResponse({
+            "status": "success",
+            "recentPackages": recent_packages
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)

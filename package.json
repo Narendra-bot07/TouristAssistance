@@ -1,6 +1,12 @@
 {
   "dependencies": {
     "bootstrap": "^5.3.5",
-    "bootstrap-icons": "^1.11.3"
+    "bootstrap-icons": "^1.11.3",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^12.6.5",
+    "jspdf": "^3.0.1",
+    "react": "^19.1.0",
+    "react-bootstrap-icons": "^1.11.5",
+    "react-dom": "^19.1.0"
   }
 }
