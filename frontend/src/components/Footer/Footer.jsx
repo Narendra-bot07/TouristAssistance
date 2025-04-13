@@ -1,15 +1,12 @@
 import React from 'react';
-import { Box, Typography, Container } from '@mui/material';
 
 const Footer = () => {
   return (
-    <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 3,position: "fixed",bottom: 0,width: "100%" }}>
-      <Container>
-        <Typography variant="body1" align="center">
-          &copy; 2023 Travel Planner. All rights reserved.
-        </Typography>
-      </Container>
-    </Box>
+    <footer className="bg-primary text-white fixed-bottom w-100">
+      <div className="container text-center">
+        <p className="mb-0">&copy; 2023 Travel Planner. All rights reserved.</p>
+      </div>
+    </footer>
   );
 };
 
