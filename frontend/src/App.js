@@ -9,22 +9,25 @@ import LoginPage from './components/LoginPage/LoginPage';
 import RegistrationPage from './components/RegistrationPage/RegistrationPage';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import "./App.css"
 
 function App() {
   return (
-    <Router>
-      <Header />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/package/:id" element={<PackageDetailPage />} />
-        <Route path="/packages" element={<PackagesArchivePage />} />
-        <Route path="/create-your-own" element={<CreateYourOwnPackage />} />
-        <Route path="/about-us" element={<AboutUsPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegistrationPage />} />
-      </Routes>
-      <Footer />
-    </Router>
+    <div className='router'>
+      <Router className="router">
+        <Header />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/package/:id" element={<PackageDetailPage />} />
+          <Route path="/packages" element={<PackagesArchivePage />} />
+          <Route path="/create-your-own" element={<CreateYourOwnPackage />} />
+          <Route path="/about-us" element={<AboutUsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegistrationPage />} />
+        </Routes>
+        <Footer />
+      </Router>
+    </div>
   );
 }
 

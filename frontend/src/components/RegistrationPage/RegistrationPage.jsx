@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, Container } from '@mui/material';
 
 const RegistrationPage = () => {
   return (
-    <Container>
+    <Container sx={{display: "flex", flexDirection: "column"}}>
       <Box sx={{ my: 4 }}>
         <Typography variant="h3" gutterBottom>
           Register
