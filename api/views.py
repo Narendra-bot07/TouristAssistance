@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 import pyrebase
 from rest_framework import status
 from rest_framework.response import Response
-from datetime import datetime
+from datetime import datetime,date
 import googlemaps
 import google.generativeai as genai
 import requests
