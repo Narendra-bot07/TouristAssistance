@@ -208,6 +208,14 @@ def get_user_by_email(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+from uuid import uuid4  # 🆕 ADDED for unique ID generation
+from datetime import datetime
+import json
+import re
+from rest_framework.decorators import api_view
+from rest_framework import status
+from django.http import JsonResponse
+
 @api_view(['POST'])
 def create_package(request):
     print("[DEBUG] Create Package endpoint hit.")
@@ -272,23 +280,19 @@ Instructions:
 5. Include estimated costs wherever possible.
 6. Respond ONLY with valid JSON following this exact structure.
 """
-
         print("[DEBUG] Sent prompt to Gemini:", prompt)
 
-        # Send prompt to Gemini model for generating itinerary
+        # Generate response
         gemini_response = model.generate_content(prompt)
         response_text = gemini_response.text
         print("[DEBUG] Gemini raw response:", response_text)
 
-        # Clean and parse the response
         try:
-            # Remove markdown code blocks if present
             clean_response = re.sub(r'```json|```', '', response_text).strip()
             itinerary = json.loads(clean_response)
             print("[DEBUG] Successfully parsed itinerary.")
         except json.JSONDecodeError as e:
             print("[ERROR] Failed to parse Gemini response:", e)
-            # Try to extract JSON from malformed response
             try:
                 json_start = response_text.find('[')
                 json_end = response_text.rfind(']') + 1
@@ -305,6 +309,10 @@ Instructions:
                     "raw_response": response_text
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # 🆕 Generate Unique Package ID
+        package_id = str(uuid4())
+        print(f"[DEBUG] Generated Package ID: {package_id}")
+
         # 🔥 Save to Firebase
         users = db.child("users").get()
         if users.val() is None:
@@ -316,6 +324,7 @@ Instructions:
             if user_data.get("username") == username:
                 user_packages = user_data.get("packages", [])
                 user_packages.append({
+                    "package_id": package_id, 
                     "input": user_input,
                     "itinerary": itinerary
                 })
@@ -329,6 +338,7 @@ Instructions:
 
         return JsonResponse({
             "status": "success",
+            "packageID": package_id,
             "packageDetails": user_input,
             "itinerary": itinerary
         }, status=status.HTTP_201_CREATED)
@@ -611,3 +621,70 @@ def change_password(request, username):
     except Exception as e:
         print("[ERROR] Exception occurred:", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def get_package_details_by_id(request, username, package_id):
+    try:
+        print("[DEBUG] Received request for username:", username)
+        print("[DEBUG] Received package_id:", package_id)
+
+        # Fetch all users from Firebase
+        users = db.child("users").get()
+
+        if not users:
+            print("[ERROR] No users found in the database")
+            return JsonResponse({
+                "status": "error",
+                "message": "No users found in the system"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Find the user by username
+        user_data = None
+        for user in users.each():
+            if user.val().get("username") == username:
+                user_data = user.val()
+                break
+
+        if not user_data:
+            print(f"[ERROR] User with username {username} not found")
+            return JsonResponse({
+                "status": "error",
+                "message": "User not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        print(f"[DEBUG] User data found: {user_data}")
+
+        # Get the packages list for the user
+        packages = user_data.get("packages", [])
+        if not packages:
+            print(f"[ERROR] No packages found for user {username}")
+            return JsonResponse({
+                "status": "error",
+                "message": "No packages found for this user"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Search for the specific package by ID
+        package = None
+        for pkg in packages:
+            if pkg.get("package_id") == package_id:
+                package = pkg
+                break
+
+        if not package:
+            print(f"[ERROR] Package with ID {package_id} not found")
+            return JsonResponse({
+                "status": "error",
+                "message": "Package not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Return the package details
+        return JsonResponse({
+            "status": "success",
+            "package": package
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print("[ERROR] Exception occurred:", str(e))
+        return JsonResponse({
+            "status": "error",
+            "message": "An internal server error occurred"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

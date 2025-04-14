@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from 'react-router-dom';
 
 const RecentTrips = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const username = localStorage.getItem('userName')
+  const username = localStorage.getItem('userName');
 
   useEffect(() => {
     const fetchRecentPackages = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/recent-packages/${username}/`);
         if (response.data.status === 'success') {
+          console.log("dat",response.data.recentPackages[0].package_id)
           setPackages(response.data.recentPackages);
         } else {
           setError(response.data.message || 'Failed to fetch packages');
@@ -28,6 +31,10 @@ const RecentTrips = () => {
     fetchRecentPackages();
   }, []);
 
+  const handleCardClick = (packageId) => {
+    navigate(`/itinerary/${packageId}`);
+  };
+
   return (
     <div className="container mt-4">
       <h1 className="text-center my-4">Recent Travel Packages</h1>
@@ -39,8 +46,15 @@ const RecentTrips = () => {
         <div className="row">
           {packages.map((pkg, index) => {
             const trip = pkg.input || {};
+            const packageId = pkg.package_id;
+            console.log(packageId);
             return (
-              <div key={index} className="col-md-6 mb-4">
+              <div
+                key={index}
+                className="col-md-6 mb-4"
+                onClick={() => handleCardClick(packageId)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="card shadow-sm rounded p-3">
                   <h5 className="card-title">
                     From <span className="text-primary">{trip.startplace}</span> to{' '}

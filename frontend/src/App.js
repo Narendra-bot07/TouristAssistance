@@ -15,6 +15,7 @@ import "./App.css";
 import RecentTrips from './components/RecentTripsComponents/RecentTrips';
 import ProfileEdit from './components/EditProfile/ProfileEdit';
 import ChangePassword from './components/ChangePassword/ChangePassword';
+import TripDetails from './components/GetParticularItinerary/TripDetails';
 function App() {
   return (
     <div className='router'>
@@ -34,6 +35,8 @@ function App() {
             <Route path='/my-trips' element={<RecentTrips />} />
             <Route path='/edit-profile' element={<ProfileEdit />} />
             <Route path='/change-password' element={<ChangePassword />} />
+            <Route path="/itinerary/:packageId" element={<TripDetails />} />
+
           </Routes>
         </main>
         <Footer />
