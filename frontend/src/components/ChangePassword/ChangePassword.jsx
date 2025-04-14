@@ -1,0 +1,93 @@
+import React, { useState } from "react";
+import axios from "axios";
+import { Button, Form, Alert } from 'react-bootstrap';
+
+const ChangePassword = ({ username }) => {
+  // State to hold the passwords
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  // Password regex for validation
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  // Function to handle password change
+  const handleChangePassword = async () => {
+    // Reset messages
+    setMessage("");
+    setError("");
+
+    if (!currentPassword || !newPassword) {
+      setError("Both fields are required");
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setError("New password shouldn't be the same as the old password");
+      return;
+    }
+
+    if (!passwordRegex.test(newPassword)) {
+      setError("New password must be at least 8 characters long, contain at least one uppercase letter, one digit, and one special character.");
+      return;
+    }
+const username = localStorage.getItem('userName');
+    try {
+      // Send the request to the Django backend
+      const response = await axios.post(
+        `http://localhost:8000/api/change-password/${username}/`, // Adjust your server URL
+        {
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }
+      );
+
+      if (response.status === 200) {
+        setMessage("Password updated successfully!");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "An error occurred. Please try again.");
+    }
+  };
+
+  return (
+    <div className="container mt-4">
+      <h2 className="text-center mb-4">Change Password</h2>
+
+      <Form>
+        <Form.Group controlId="currentPassword">
+          <Form.Label>Current Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter current password"
+          />
+        </Form.Group>
+
+        <Form.Group controlId="newPassword">
+          <Form.Label>New Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password"
+          />
+          <Form.Text className="text-muted">
+            New password must be at least 8 characters long, contain at least one uppercase letter, one digit, and one special character.
+          </Form.Text>
+        </Form.Group>
+
+        <Button variant="primary" onClick={handleChangePassword} className="w-100">
+          Change Password
+        </Button>
+      </Form>
+
+      {message && <Alert variant="success" className="mt-3">{message}</Alert>}
+      {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+    </div>
+  );
+};
+
+export default ChangePassword;

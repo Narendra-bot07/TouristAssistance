@@ -13,7 +13,8 @@ import ItineraryViewer from './components/ItineraryPage/ItineraryViewer';
 import Profile from './components/ProfileComponent/Profile';
 import "./App.css";
 import RecentTrips from './components/RecentTripsComponents/RecentTrips';
-
+import ProfileEdit from './components/EditProfile/ProfileEdit';
+import ChangePassword from './components/ChangePassword/ChangePassword';
 function App() {
   return (
     <div className='router'>
@@ -31,7 +32,8 @@ function App() {
             <Route path="/register" element={<RegistrationPage />} />
             <Route path='/profile' element={<Profile />} />
             <Route path='/my-trips' element={<RecentTrips />} />
-
+            <Route path='/edit-profile' element={<ProfileEdit />} />
+            <Route path='/change-password' element={<ChangePassword />} />
           </Routes>
         </main>
         <Footer />

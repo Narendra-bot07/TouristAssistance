@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { NavLink } from 'react-router-dom';
 
 const Profile = ({ username }) => {
   const [profile, setProfile] = useState(null);
@@ -8,10 +9,11 @@ const Profile = ({ username }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const username = localStorage.getItem('userName')
+    const username = localStorage.getItem('userName');
     const fetchProfile = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/profile/${username}/`);
+        console.log(response.data.profile)
         setProfile(response.data.profile);
       } catch (err) {
         setError("Failed to fetch data from the server.");
@@ -47,7 +49,22 @@ const Profile = ({ username }) => {
             </div>
           </div>
 
-          <button className="btn btn-primary mt-3">Edit Profile</button>
+          <div className="row mt-4">
+            <div className="col-6">
+              <p><strong>Age:</strong> {profile.age}</p>
+            </div>
+            <div className="col-6">
+              <p><strong>Date of Birth:</strong> {profile.dob}</p>
+            </div>
+          </div>
+
+          <button className="btn btn-primary mt-3">
+            <NavLink to='/edit-profile' className="text-white">Edit Profile</NavLink>
+          </button>
+          
+          <button className="btn btn-warning mt-3 ms-3">
+            <NavLink to='/change-password' className="text-white">Change Password</NavLink>
+          </button>
         </div>
       </div>
     </div>

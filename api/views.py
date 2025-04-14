@@ -9,7 +9,7 @@ import google.generativeai as genai
 import requests
 import json
 import re
-# ✅ Firebase configuration (use your actual working values)
+
 firebaseConfig = {
     "apiKey": "AIzaSyBvF4sctKkdQFSkkvvDyLKENJMFlaWCWQU",
     "authDomain": "coe-project-24d1c.firebaseapp.com",
@@ -21,13 +21,11 @@ firebaseConfig = {
     "measurementId": "G-KGC9E9TWWH"
 }
 
-# ✅ Initialize Firebase
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
 auth = firebase.auth()
 
-# ✅ API Keys
-GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s."
+GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s"
 GOOGLE_MAPS_API_KEY = "AIzaSyBf7g228DZPB46GCpKufTBV_QpinWBCJp4"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
 
@@ -61,23 +59,23 @@ def register_user(request):
         # ✅ Check all fields are present and not empty
         required_fields = [username, name, email, phone, password, confirm_password]
         if any(field is None or str(field).strip() == '' for field in required_fields):
-            return JsonResponse({"status": "error", "message": "All fields are required"}, status=400)
+            return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Password match check
         if password.strip() != confirm_password.strip():
-            return JsonResponse({"status": "error", "message": "Passwords do not match"}, status=400)
+            return JsonResponse({"status": "error", "message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Check if user exists
         users = db.child("users").get()
-        if users is not None and users.each() is not None:
+        if users.val() is not None:
             for user in users.each():
                 user_data = user.val()
                 if user_data.get("email") == email:
-                    return JsonResponse({"status": "error", "message": "Email already registered"}, status=400)
+                    return JsonResponse({"status": "error", "message": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
                 if user_data.get("phone") == phone:
-                    return JsonResponse({"status": "error", "message": "Phone number already registered"}, status=400)
+                    return JsonResponse({"status": "error", "message": "Phone number already registered"}, status=status.HTTP_400_BAD_REQUEST)
                 if user_data.get("username") == username:
-                    return JsonResponse({"status": "error", "message": "Username already taken"}, status=400)
+                    return JsonResponse({"status": "error", "message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Save new user
         result = db.child("users").push({
@@ -89,11 +87,11 @@ def register_user(request):
         })
 
         print("[DEBUG] Firebase push result:", result)
-        return JsonResponse({"status": "success", "message": "User registered successfully"}, status=201)
+        return JsonResponse({"status": "success", "message": "User registered successfully"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         print("[ERROR]", str(e))
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -107,59 +105,57 @@ def login_user(request):
             identifier = data.get('identifier')  # can be email or username
             password = data.get('password')
 
-            if not all([identifier, password]):
-                return JsonResponse({"status": "error", "message": "Identifier and password are required"}, status=400)
+            if not identifier or not password:
+                return JsonResponse({"status": "error", "message": "Identifier and password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Fetch all users
             users = db.child("users").get()
-            if users is None:
-                return JsonResponse({"status": "error", "message": "No users found in the database"}, status=404)
+            if users.val() is None:
+                return JsonResponse({"status": "error", "message": "No users found in the database"}, status=status.HTTP_404_NOT_FOUND)
 
             for user in users.each():
                 user_data = user.val()
-                if (user_data["email"] == identifier or user_data["username"] == identifier) and user_data["password"] == password:
+                if (user_data.get("email") == identifier or user_data.get("username") == identifier) and user_data.get("password") == password:
                     print("[DEBUG] User authenticated successfully.")
                     return JsonResponse({
                         "status": "success",
                         "message": "Login successful",
-                        "email": user_data["email"],
-                        "username":user_data["username"],
-                        "name": user_data["name"]
-                    }, status=200)
+                        "email": user_data.get("email"),
+                        "username": user_data.get("username"),
+                        "name": user_data.get("name")
+                    }, status=status.HTTP_200_OK)
 
             print("[DEBUG] No matching user found.")
-            return JsonResponse({"status": "error", "message": "Invalid credentials"}, status=400)
+            return JsonResponse({"status": "error", "message": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             print("[ERROR]", str(e))
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 def get_user_by_email(request):
     email = request.GET.get('email')
     if not email:
-        return JsonResponse({"status": "error", "message": "Email is required"}, status=400)
+        return JsonResponse({"status": "error", "message": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         users = db.child("users").get()
 
-        if users is None:
-            return JsonResponse({"status": "error", "message": "No users found in the database"}, status=404)
+        if users.val() is None:
+            return JsonResponse({"status": "error", "message": "No users found in the database"}, status=status.HTTP_404_NOT_FOUND)
 
         for user in users.each():
             data = user.val()
-            if data["email"] == email:
-                return JsonResponse({"status": "success", "name": data["name"]}, status=200)
+            if data.get("email") == email:
+                return JsonResponse({"status": "success", "name": data.get("name")}, status=status.HTTP_200_OK)
 
-        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+        return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
     except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
-
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -167,7 +163,7 @@ def create_package(request):
     print("[DEBUG] Create Package endpoint hit.")
 
     if request.method != 'POST':
-        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         data = request.data
@@ -181,10 +177,12 @@ def create_package(request):
             return JsonResponse({
                 "status": "error",
                 "message": "Username and package details are required"
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # 🔄 Fix Date Format & Compute Duration
-        def fix_year(year): return '20' + year if len(year) == 2 else year
+        def fix_year(year): 
+            return '20' + year if len(year) == 2 else year
+            
         try:
             sd = user_input['startDate'].split('-')
             ed = user_input['endDate'].split('-')
@@ -197,7 +195,7 @@ def create_package(request):
             return JsonResponse({
                 "status": "error",
                 "message": f"Invalid date format: {str(e)}"
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # 🌍 Prompt to Gemini
         prompt = f"""
@@ -225,27 +223,44 @@ Instructions:
 6. Respond ONLY with valid JSON following this exact structure.
 """
 
-        print("[DEBUG] Sending prompt to Gemini...")
+        print("[DEBUG] Sent prompt to Gemini:", prompt)
+
+        # Send prompt to Gemini model for generating itinerary
         gemini_response = model.generate_content(prompt)
         response_text = gemini_response.text
-        clean_response = response_text.replace('```json', '').replace('```', '').strip()
+        print("[DEBUG] Gemini raw response:", response_text)
 
+        # Clean and parse the response
         try:
+            # Remove markdown code blocks if present
+            clean_response = re.sub(r'```json|```', '', response_text).strip()
             itinerary = json.loads(clean_response)
             print("[DEBUG] Successfully parsed itinerary.")
         except json.JSONDecodeError as e:
             print("[ERROR] Failed to parse Gemini response:", e)
-            return JsonResponse({
-                "status": "error",
-                "message": "Failed to parse itinerary JSON",
-                "raw_response": response_text
-            }, status=500)
+            # Try to extract JSON from malformed response
+            try:
+                json_start = response_text.find('[')
+                json_end = response_text.rfind(']') + 1
+                if json_start != -1 and json_end != -1:
+                    clean_response = response_text[json_start:json_end]
+                    itinerary = json.loads(clean_response)
+                else:
+                    raise ValueError("No valid JSON found in response")
+            except Exception as e2:
+                print("[ERROR] Secondary parsing failed:", e2)
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Failed to parse itinerary JSON",
+                    "raw_response": response_text
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # 🔥 Save to Firebase
         users = db.child("users").get()
-        if users is None:
-            return JsonResponse({"status": "error", "message": "No users found in database"}, status=404)
+        if users.val() is None:
+            return JsonResponse({"status": "error", "message": "No users found in database"}, status=status.HTTP_404_NOT_FOUND)
 
+        user_found = False
         for user in users.each():
             user_data = user.val()
             if user_data.get("username") == username:
@@ -256,18 +271,21 @@ Instructions:
                 })
                 db.child("users").child(user.key()).update({"packages": user_packages})
                 print("[DEBUG] Successfully saved itinerary for user:", username)
+                user_found = True
+                break
 
-                return JsonResponse({
-                    "status": "success",
-                    "packageDetails": user_input,
-                    "itinerary": itinerary
-                }, status=201)
+        if not user_found:
+            return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+        return JsonResponse({
+            "status": "success",
+            "packageDetails": user_input,
+            "itinerary": itinerary
+        }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         print("[ERROR] Exception occurred:", str(e))
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -278,7 +296,7 @@ def get_latest_itinerary(request, username):
             return JsonResponse({
                 "status": "error",
                 "message": "Invalid username provided"
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # Fetch all users
         users = db.child("users").get()
@@ -286,7 +304,7 @@ def get_latest_itinerary(request, username):
             return JsonResponse({
                 "status": "error",
                 "message": "No users found in system"
-            }, status=404)
+            }, status=status.HTTP_404_NOT_FOUND)
 
         # Find user by username
         user_data = None
@@ -299,7 +317,7 @@ def get_latest_itinerary(request, username):
             return JsonResponse({
                 "status": "error",
                 "message": "User not found"
-            }, status=404)
+            }, status=status.HTTP_404_NOT_FOUND)
 
         # Get packages list
         packages = user_data.get("packages", [])
@@ -307,7 +325,7 @@ def get_latest_itinerary(request, username):
             return JsonResponse({
                 "status": "error",
                 "message": "No itineraries found for this user"
-            }, status=404)
+            }, status=status.HTTP_404_NOT_FOUND)
 
         # Get latest package based on index
         latest_package = packages[-1]
@@ -316,13 +334,14 @@ def get_latest_itinerary(request, username):
         itinerary = latest_package.get("itinerary")
         if isinstance(itinerary, str):
             try:
-                cleaned_str = itinerary.replace('```json', '').replace('```', '').strip()
+                cleaned_str = re.sub(r'```json|```', '', itinerary).strip()
                 parsed_itinerary = json.loads(cleaned_str)
-            except Exception:
+            except Exception as e:
+                print("[ERROR] Failed to parse itinerary string:", e)
                 return JsonResponse({
                     "status": "error",
                     "message": "Itinerary parsing failed. Invalid format."
-                }, status=500)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             parsed_itinerary = itinerary
 
@@ -330,25 +349,27 @@ def get_latest_itinerary(request, username):
             "status": "success",
             "packageDetails": latest_package.get("input"),
             "itinerary": parsed_itinerary
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
         print("[ERROR]", str(e))
         return JsonResponse({
             "status": "error",
             "message": "An internal server error occurred"
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 def get_recent_packages(request, username):
     try:
         # Validate username
         if not username or not isinstance(username, str):
-            return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=400)
+            return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Fetch the user from Firebase
         users = db.child("users").get()
         if not users:
-            return JsonResponse({"status": "error", "message": "No users found in system"}, status=404)
+            return JsonResponse({"status": "error", "message": "No users found in system"}, status=status.HTTP_404_NOT_FOUND)
 
         # Find the user
         user_data = None
@@ -358,38 +379,36 @@ def get_recent_packages(request, username):
                 break
 
         if not user_data:
-            return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+            return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Fetch the packages for the user
         packages = user_data.get("packages", [])
         if not packages:
-            return JsonResponse({"status": "error", "message": "No packages found for this user"}, status=404)
+            return JsonResponse({"status": "error", "message": "No packages found for this user"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Sort packages based on the index (assuming 'index' is a field in each package)
-        sorted_packages = sorted(packages, key=lambda x: x.get("index", 0), reverse=True)
-
-        # Return the recent packages (you can choose how many recent packages you want to return)
-        recent_packages = sorted_packages[:5]  # Example: Fetch the 5 most recent packages
+        # Return the most recent packages (last 5)
+        recent_packages = packages[-5:] if len(packages) > 5 else packages
 
         return JsonResponse({
             "status": "success",
             "recentPackages": recent_packages
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 def get_user_profile(request, username):
     try:
         # Validate input
         if not username or not isinstance(username, str):
-            return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=400)
+            return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Fetch users from Firebase
         users = db.child("users").get()
         if not users:
-            return JsonResponse({"status": "error", "message": "No users found"}, status=404)
+            return JsonResponse({"status": "error", "message": "No users found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Search for user by username
         user_data = None
@@ -399,7 +418,7 @@ def get_user_profile(request, username):
                 break
 
         if not user_data:
-            return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+            return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Prepare and return the user profile with only the required fields
         profile = {
@@ -407,12 +426,138 @@ def get_user_profile(request, username):
             "username": user_data.get("username"),
             "name": user_data.get("name"),
             "number": user_data.get("phone"),
+            "dob": user_data.get("dob"),
+            "age": user_data.get("age")
         }
 
         return JsonResponse({
             "status": "success",
             "profile": profile
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def update_user(request, username):
+    print("[DEBUG] Update endpoint hit.")
+    try:
+        # Get the data from the request
+        data = request.data
+        print("[DEBUG] Received data:", data)
+
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phoneNumber')
+        dob = data.get('dob')  # Date of Birth
+
+        # ✅ Debug Field Values
+        print("[DEBUG] name:", name)
+        print("[DEBUG] email:", email)
+        print("[DEBUG] phone:", phone)
+        print("[DEBUG] dob:", dob)
+
+        # ✅ Check all fields are present and not empty
+        required_fields = [name, email, phone, dob]
+        if any(field is None or str(field).strip() == '' for field in required_fields):
+            print("[DEBUG] Missing required fields.")
+            return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Calculate age from DOB
+        try:
+            dob_date = datetime.strptime(dob, '%Y-%m-%d')  # Assuming dob is in 'YYYY-MM-DD' format
+            today = datetime.today()
+            age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+            print("[DEBUG] Age calculated:", age)
+        except Exception as e:
+            print("[ERROR] Error calculating age:", str(e))
+            return JsonResponse({"status": "error", "message": "Invalid date format for DOB"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Check if username exists in the database
+        print("[DEBUG] Checking if user exists in the database for username:", username)
+        user_ref = db.child("users").order_by_child("username").equal_to(username).get()
+
+        if user_ref.val() is None:
+            print("[DEBUG] User not found in the database.")
+            return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # ✅ Update user details in the database
+        print("[DEBUG] Updating user details in Firebase...")
+        user_key = list(user_ref.val().keys())[0]  # Get the user key for the matching username
+
+        # Updating the user data in Firebase
+        db.child("users").child(user_key).update({
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "dob": dob,
+            "age": age,
+        })
+
+        # Success response
+        return JsonResponse({"status": "success", "message": "User updated successfully"}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print("[ERROR] Exception occurred:", str(e))
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def change_password(request, username):
+    print("[DEBUG] Change password endpoint hit.")
+    try:
+        # Get the data from the request
+        data = request.data
+        print("[DEBUG] Received data:", data)
+
+        current_password = data.get('currentPassword')
+        new_password = data.get('newPassword')
+
+        # ✅ Debug Field Values
+        print("[DEBUG] current_password:", current_password)
+        print("[DEBUG] new_password:", new_password)
+
+        # ✅ Check if fields are present and not empty
+        if not current_password or not new_password:
+            print("[DEBUG] Missing current or new password.")
+            return JsonResponse({"status": "error", "message": "Current and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Check if new password is the same as the current password
+        if current_password == new_password:
+            print("[DEBUG] New password is the same as the current password.")
+            return JsonResponse({"status": "error", "message": "New password shouldn't be the same as the old password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Check if new password is strong enough
+        if len(new_password) < 6:
+            print("[DEBUG] New password too short.")
+            return JsonResponse({"status": "error", "message": "New password must be at least 6 characters"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Check if username exists in the database
+        print("[DEBUG] Checking if user exists in the database for username:", username)
+        user_ref = db.child("users").order_by_child("username").equal_to(username).get()
+
+        if user_ref.val() is None:
+            print("[DEBUG] User not found in the database.")
+            return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # ✅ Fetch current password from the user's data
+        user_data = list(user_ref.val().values())[0]
+        stored_password = user_data.get("password")
+
+        # ✅ Compare current password with stored password
+        if current_password != stored_password:
+            print("[DEBUG] Current password does not match stored password.")
+            return JsonResponse({"status": "error", "message": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Update password
+        print("[DEBUG] Updating password within the user document in Firebase...")
+        db.child("users").child(list(user_ref.val().keys())[0]).update({
+            "password": new_password,
+        })
+
+        return JsonResponse({"status": "success", "message": "Password updated successfully"}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print("[ERROR] Exception occurred:", str(e))
+        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

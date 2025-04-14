@@ -2,29 +2,81 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { Carousel, Button, Card } from 'react-bootstrap';
+import { Card, Button, Container, Row, Col, Alert, Spinner, Badge } from 'react-bootstrap';
+
+const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; // Replace this with your actual Unsplash access key
+
+const fetchUnsplashImage = async (query) => {
+  try {
+    const res = await axios.get(`https://api.unsplash.com/search/photos`, {
+      params: {
+        query,
+        orientation: 'landscape',
+        per_page: 1
+      },
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+      }
+    });
+
+    return res?.data?.results?.[0]?.urls?.regular || null;
+  } catch (err) {
+    console.error('Unsplash error:', err);
+    return null;
+  }
+};
 
 const ItineraryViewer = () => {
   const [tripData, setTripData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const fetchItinerary = async () => {
       try {
         const userEmail = localStorage.getItem('userName');
         if (!userEmail) {
-          console.error('User email not found in localStorage!');
           setError('User email not found.');
           setLoading(false);
           return;
         }
+
         const response = await axios.get(`http://localhost:8000/api/get-latest-itinerary/${userEmail}`);
-        console.log('Fetched response data:', response.data);
-        setTripData(response.data);
+        const data = response.data;
+
+        // 🌅 Enhance itinerary with Unsplash images
+        const enhancedItinerary = await Promise.all(
+          data.itinerary.map(async (day) => {
+            const locationImg = await fetchUnsplashImage(day.location);
+            const accommodationImg = await fetchUnsplashImage(day.accommodation?.name);
+
+            const mealsWithImages = await Promise.all(
+              (day.meals || []).map(async (meal) => ({
+                ...meal,
+                img: await fetchUnsplashImage(meal.type)
+              }))
+            );
+
+            const activitiesWithImages = await Promise.all(
+              (day.activities || []).map(async (act) => ({
+                ...act,
+                img: await fetchUnsplashImage(act.type)
+              }))
+            );
+
+            return {
+              ...day,
+              locationImg,
+              accommodationImg,
+              meals: mealsWithImages,
+              activities: activitiesWithImages
+            };
+          })
+        );
+
+        setTripData({ ...data, itinerary: enhancedItinerary });
       } catch (err) {
-        console.error('Error fetching itinerary:', err);
+        console.error(err);
         setError('Error fetching itinerary. Please try again later.');
       } finally {
         setLoading(false);
@@ -35,119 +87,145 @@ const ItineraryViewer = () => {
   }, []);
 
   const toggleActivityStatus = (dayIndex, activityIndex) => {
-    const updatedTripData = { ...tripData };
-    const activity = updatedTripData.itinerary[dayIndex].activities[activityIndex];
+    const updated = { ...tripData };
+    const activity = updated.itinerary[dayIndex].activities[activityIndex];
     activity.status = activity.status === 'Done' ? 'Not Done' : 'Done';
-    setTripData(updatedTripData);
+    setTripData(updated);
   };
 
-  if (loading) return (
-    <div className="text-center mt-5">
-      <div className="spinner-border" role="status">
-        <span className="visually-hidden">Loading...</span>
+  if (loading) {
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" role="status" />
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  if (error) return <Alert variant="danger">{error}</Alert>;
 
-  const itinerary = tripData?.itinerary || [];
+  const itinerary = Array.isArray(tripData?.itinerary) ? tripData.itinerary : [];
 
   return (
-    <div className="container py-4">
-      <h2>Trip Itinerary</h2>
+    <Container className="my-5">
+      <h2 className="text-center fw-bold mb-4" style={{ fontSize: '2.5rem', color: '#2c3e50' }}>
+        ✈ Your Dream Itinerary
+      </h2>
 
-      {itinerary.length === 0 ? (
-        <div className="alert alert-warning">No itinerary data available.</div>
-      ) : (
-        <Carousel activeIndex={activeIndex} controls={false} indicators={false}>
-          {itinerary.map((dayData, index) => (
-            <Carousel.Item key={index}>
-              <Card className="mb-3">
-                <Card.Header>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h4 className="mb-0">Day {dayData.day ?? 'N/A'} - {dayData.date ?? 'N/A'}</h4>
-                    <div>
+      {itinerary.map((dayData, dayIndex) => (
+        <Card key={dayIndex} className="mb-4 shadow-lg border-0 rounded-4">
+          <Card.Header className="bg-white p-0 rounded-top">
+            {dayData.locationImg && (
+              <img
+                src={dayData.locationImg}
+                alt={dayData.location}
+                className="img-fluid rounded-top"
+                style={{ height: '500px', objectFit: 'cover', width: '100%' }}
+              />
+            )}
+            <div className="p-3 bg-light d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="mb-0">🌅 Day {dayIndex + 1} - {dayData?.date ?? ''}</h5>
+              </div>
+              <div className="d-flex gap-2 align-items-center">
+                <Badge bg="light" text="dark">📍 {dayData?.location ?? ''}</Badge>
+                <Badge bg="warning" text="dark">🔢 Day {dayData?.day ?? dayIndex + 1}</Badge>
+              </div>
+            </div>
+          </Card.Header>
+
+          <Card.Body className="p-4">
+            <Row className="mb-4">
+              <Col md={6}>
+                <h6 className="text-primary mb-2">🏨 Accommodation</h6>
+                {dayData.accommodationImg && (
+                  <img
+                    src={dayData.accommodationImg}
+                    alt="Accommodation"
+                    className="img-fluid rounded-3 mb-2"
+                    style={{ height: '500px', objectFit: 'cover', width: '100%' }}
+                  />
+                )}
+                <Card className="border-0 bg-light shadow-sm p-3 rounded-3">
+                  <p className="mb-1"><strong>{dayData.accommodation?.name ?? ''}</strong> ({dayData.accommodation?.type ?? ''})</p>
+                  <p className="mb-1">💰 {dayData.accommodation?.estimatedCost ?? ''} {dayData.accommodation?.currency ?? ''}</p>
+                  <small className="text-muted">{dayData.accommodation?.notes ?? ''}</small>
+                </Card>
+              </Col>
+
+              <Col md={6}>
+                <h6 className="text-success mb-2">🚗 Transport</h6>
+                {Array.isArray(dayData.transport) && dayData.transport.length > 0 ? dayData.transport.map((t, i) => (
+                  <Card key={i} className="border-0 bg-light shadow-sm p-2 mb-2 rounded-3">
+                    <p className="mb-1"><strong>{t.mode ?? ''}</strong>: {t.details ?? ''}</p>
+                    <small className="text-muted">💸 {t.estimatedCost ?? ''} {t.currency ?? ''}</small>
+                  </Card>
+                )) : <p>No transport info.</p>}
+              </Col>
+            </Row>
+
+            <Row className="mb-4">
+              <Col md={6}>
+                <h6 className="text-danger mb-2">🍽 Meals</h6>
+                {Array.isArray(dayData.meals) && dayData.meals.length > 0 ? dayData.meals.map((meal, i) => (
+                  <Card key={i} className="border-0 bg-light shadow-sm p-2 mb-2 rounded-3">
+                    {meal.img && (
+                      <img
+                        src={meal.img}
+                        alt={meal.type}
+                        className="img-fluid rounded-3 mb-2"
+                        style={{ height: '140px', objectFit: 'cover', width: '100%' }}
+                      />
+                    )}
+                    <p className="mb-1"><strong>{meal.type ?? ''}</strong>: {meal.description ?? ''}</p>
+                    <small className="text-muted">💵 {meal.cost ?? ''} {meal.currency ?? ''}</small>
+                    <br />
+                    <small className="text-muted">{meal.notes ?? ''}</small>
+                  </Card>
+                )) : <p>No meals planned.</p>}
+              </Col>
+
+              <Col md={6}>
+                <h6 className="text-warning mb-2">🎯 Activities</h6>
+                {Array.isArray(dayData.activities) && dayData.activities.length > 0 ? dayData.activities.map((act, i) => (
+                  <Card key={i} className="border-0 bg-light shadow-sm p-2 mb-3 rounded-3">
+                    {act.img && (
+                      <img
+                        src={act.img}
+                        alt={act.type}
+                        className="img-fluid rounded-3 mb-2"
+                        style={{ height: '140px', objectFit: 'cover', width: '100%' }}
+                      />
+                    )}
+                    <p className="mb-1"><strong>{act.type ?? ''}</strong>: {act.description ?? ''}</p>
+                    <small className="text-muted">⏱ {act.duration ?? ''} | 📝 {act.notes ?? ''}</small>
+                    <div className="mt-2">
                       <Button
-                        variant="light"
-                        className="me-2 p-1"
-                        onClick={() => setActiveIndex(activeIndex - 1)}
-                        disabled={activeIndex === 0}
+                        size="sm"
+                        variant={act.status === 'Done' ? 'success' : 'outline-secondary'}
+                        onClick={() => toggleActivityStatus(dayIndex, i)}
                       >
-                        <i className="bi bi-arrow-left-circle" style={{ fontSize: '1.3rem' }}></i>
-                      </Button>
-                      <Button
-                        variant="light"
-                        className="p-1"
-                        onClick={() => setActiveIndex(activeIndex + 1)}
-                        disabled={activeIndex === itinerary.length - 1}
-                      >
-                        <i className="bi bi-arrow-right-circle" style={{ fontSize: '1.3rem' }}></i>
+                        {act.status === 'Done' ? '✅ Done' : 'Mark as Done'}
                       </Button>
                     </div>
-                  </div>
-                </Card.Header>
+                  </Card>
+                )) : <p>No activities yet.</p>}
+              </Col>
+            </Row>
 
-                <Card.Body>
-                  <h5>Location: {dayData.location ?? 'N/A'}</h5>
-
-                  <h6>Activities:</h6>
-                  <ul>
-                    {(dayData.activities ?? []).map((activity, index) => (
-                      <li key={index}>
-                        <strong>{activity.type ?? 'N/A'}:</strong> {activity.description ?? 'N/A'} <br />
-                        <small><i>Duration: {activity.duration ?? 'N/A'}</i></small>
-                        <p>{activity.notes ?? 'N/A'}</p>
-
-                        <Button
-                          variant={activity.status === 'Done' ? 'success' : 'secondary'}
-                          onClick={() => toggleActivityStatus(dayData.day - 1, index)}
-                          className="mb-2"
-                        >
-                          Mark as {activity.status === 'Done' ? 'Not Done' : 'Done'}
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <h6>Transport:</h6>
-                  <ul>
-                    {(dayData.transport ?? []).map((transport, index) => (
-                      <li key={index}>
-                        <strong>{transport.mode ?? 'N/A'}:</strong> {transport.details ?? 'N/A'} <br />
-                        <small><i>Estimated Cost: {transport.estimatedCost ?? 'N/A'} {transport.currency ?? ''}</i></small>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <h6>Accommodation:</h6>
-                  <p><strong>{dayData.accommodation?.name ?? 'N/A'}</strong> ({dayData.accommodation?.type ?? 'N/A'})</p>
-                  <p>Estimated Cost: {dayData.accommodation?.estimatedCost ?? 'N/A'} {dayData.accommodation?.currency ?? ''}</p>
-                  <p>{dayData.accommodation?.notes ?? 'N/A'}</p>
-
-                  <h6>Meals:</h6>
-                  <ul>
-                    {(dayData.meals ?? []).map((meal, index) => (
-                      <li key={index}>
-                        <strong>{meal.type ?? 'N/A'}:</strong> {meal.description ?? 'N/A'} <br />
-                        <small><i>Cost: {meal.cost ?? 'N/A'} {meal.currency ?? ''}</i></small>
-                        <p>{meal.notes ?? 'N/A'}</p>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <h6>Cost Estimate:</h6>
-                  <p><strong>{dayData.costEstimate ?? 'N/A'} {dayData.accommodation?.currency ?? ''}</strong></p>
-
-                  <h6>Notes:</h6>
-                  <p>{dayData.notes ?? 'N/A'}</p>
-                </Card.Body>
-              </Card>
-            </Carousel.Item>
-          ))}
-        </Carousel>
-      )}
-    </div>
+            <Row>
+              <Col md={6}>
+                <h6 className="text-info">💰 Estimated Total</h6>
+                <p className="fs-5 fw-bold">{dayData?.costEstimate ?? ''} {dayData.accommodation?.currency ?? ''}</p>
+              </Col>
+              <Col md={6}>
+                <h6 className="text-secondary">📝 Extra Notes</h6>
+                <p>{dayData?.notes ?? ''}</p>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      ))}
+    </Container>
   );
 };
 
