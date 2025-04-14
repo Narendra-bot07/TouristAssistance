@@ -1,0 +1,84 @@
+.itinerary-card {
+    background: #ffffff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .itinerary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .section-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .image-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+  
+  .image-overlay h3,
+  .image-overlay p {
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .btn-outline-primary {
+    border-color: #007bff;
+    color: #007bff;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #007bff;
+    color: #ffffff;
+  }
+  
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+  
+  .progress-bar {
+    background-color: #007bff !important;
+    font-weight: 600;
+  }
+  
+  .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .summary-item h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .summary-item p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
