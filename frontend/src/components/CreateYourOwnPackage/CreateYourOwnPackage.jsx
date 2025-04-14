@@ -1,37 +1,45 @@
 import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
+import { Card, Container, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import { motion } from 'framer-motion';
+import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaUtensils, FaWallet, FaPlane, FaMapSigns, FaGlobe } from 'react-icons/fa';
+import './CreateYourOwnPackage.css';
+
 const CreateYourOwnPackage = () => {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     startCountry: '',
     destinationCountry: '',
     startDate: '',
     endDate: '',
-    guests: '',
     numPeople: '',
     preferences: [],
     goals: [],
     diet: '',
     budget: ''
   });
+  const responseStates = { initial: "INITIAL", loading: "LOADING", success: "SUCCESS", failure: "FAILURE" };
+  const [responseState, setResponseState] = useState(responseStates.initial);
+  const [error, setError] = useState('');
 
-  // Function to format the date to 'DD-MM-YYYY' format
+  // Format date to 'DD-MM-YYYY'
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');  // Months are 0-indexed
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-
     return `${day}-${month}-${year}`;
   };
 
+  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle checkbox changes
   const handleCheckboxChange = (e) => {
     const { value, checked, name } = e.target;
     setFormData(prev => {
@@ -42,14 +50,14 @@ const navigate = useNavigate();
     });
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const userEmail = localStorage.getItem('userEmail');
     const userName = localStorage.getItem('userName');
-    console.log(userName)
     if (!userEmail || !userName) {
-      alert("Please log in before creating a package.");
+      setError('Please log in before creating a package.');
       return;
     }
 
@@ -57,11 +65,11 @@ const navigate = useNavigate();
     const formattedEndDate = formatDate(formData.endDate);
 
     const payload = {
-      username: userName,  // Send the username now
+      username: userName,
       email: userEmail,
       packageDetails: {
-        startplace: formData.startCountry,  // Renamed to match the backend's expected key
-        destinationplace: formData.destinationCountry,  // Renamed to match the backend's expected key
+        startplace: formData.startCountry,
+        destinationplace: formData.destinationCountry,
         startDate: formattedStartDate,
         endDate: formattedEndDate,
         numPeople: formData.numPeople,
@@ -72,9 +80,9 @@ const navigate = useNavigate();
       }
     };
 
-    console.log('[DEBUG] Sending payload:', payload);
-
     try {
+      setResponseState(responseStates.loading);
+      setError('');
       const response = await axios.post('http://localhost:8000/api/save_trip_package/', payload, {
         headers: {
           'Content-Type': 'application/json',
@@ -82,11 +90,12 @@ const navigate = useNavigate();
       });
 
       console.log('Package created successfully:', response.data);
-      alert('Your package has been created successfully!');
+      setResponseState(responseStates.success);
       navigate('/itinerary');
     } catch (error) {
+      setResponseState(responseStates.failure);
+      setError('Error creating your package. Please try again.');
       console.error('Error creating package:', error);
-      alert('There was an error creating your package. Please try again.');
     }
   };
 
@@ -106,155 +115,250 @@ const navigate = useNavigate();
   ];
 
   return (
-    <div className="container mt-5 mb-5">
-      <div className="card p-4 shadow">
-        <h2 className="text-center mb-4">Build Your Own Package</h2>
+    <Container className="my-5">
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Card className="p-4 shadow-lg border-0 rounded-4">
+          <h2 className="text-center mb-4 fw-bold">
+            <FaPlane className="me-2" /> Build Your Dream Trip
+          </h2>
 
-        <form onSubmit={handleSubmit}>
-          {/* Start Place */}
-          <div className="mb-3">
-            <label className="form-label">Start Place</label>
-            <input
-              type="text"
-              name="startCountry"  // 'name' here should match the state key in formData
-              value={formData.startCountry}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Ex. India"
-            />
-          </div>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert variant="danger" className="rounded-3">
+                {error}
+              </Alert>
+            </motion.div>
+          )}
 
-          {/* Destination Place */}
-          <div className="mb-3">
-            <label className="form-label">Destination Place</label>
-            <input
-              type="text"
-              name="destinationCountry"  // 'name' here should match the state key in formData
-              value={formData.destinationCountry}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Ex. Switzerland"
-            />
-          </div>
-
-          {/* Dates */}
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Start Date</label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label">End Date</label>
-              <input
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-          </div>
-
-          {/* Number of People */}
-          <div className="mb-3">
-            <label className="form-label">Number of People</label>
-            <input
-              type="number"
-              name="numPeople"
-              value={formData.numPeople}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Enter number of people in group"
-            />
-          </div>
-
-          {/* Preferences */}
-          <div className="mb-3">
-            <label className="form-label">Activity Preferences</label>
-            <div className="row">
-              {activities.map((activity, i) => (
-                <div key={i} className="col-6 col-md-4">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value={activity}
-                      checked={formData.preferences.includes(activity)}
-                      onChange={handleCheckboxChange}
-                      name="preferences"
-                      id={`pref-${i}`}
+          <Form onSubmit={handleSubmit}>
+            <Row>
+              {/* Start Place */}
+              <Col md={6} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaMapMarkerAlt className="me-2" /> Start Place
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="text"
+                      name="startCountry"
+                      value={formData.startCountry}
+                      onChange={handleChange}
+                      placeholder="e.g., India"
+                      className="rounded-3"
+                      required
                     />
-                    <label className="form-check-label" htmlFor={`pref-${i}`}>
-                      {activity}
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                  </motion.div>
+                </Form.Group>
+              </Col>
 
-          {/* Goals */}
-          <div className="mb-3">
-            <label className="form-label">Travel Goals</label>
-            <div className="row">
-              {travelGoals.map((goal, i) => (
-                <div key={i} className="col-6 col-md-4">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value={goal}
-                      checked={formData.goals.includes(goal)}
-                      onChange={handleCheckboxChange}
-                      name="goals"
-                      id={`goal-${i}`}
+              {/* Destination Place */}
+              <Col md={6} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaMapMarkerAlt className="me-2" /> Destination Place
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="text"
+                      name="destinationCountry"
+                      value={formData.destinationCountry}
+                      onChange={handleChange}
+                      placeholder="e.g., Switzerland"
+                      className="rounded-3"
+                      required
                     />
-                    <label className="form-check-label" htmlFor={`goal-${i}`}>
-                      {goal}
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                  </motion.div>
+                </Form.Group>
+              </Col>
+            </Row>
 
-          {/* Dietary */}
-          <div className="mb-3">
-            <label className="form-label">Dietary Restrictions</label>
-            <input
-              type="text"
-              name="diet"
-              value={formData.diet}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="e.g., Vegan, Gluten-free"
-            />
-          </div>
+            <Row>
+              {/* Start Date */}
+              <Col md={6} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaCalendarAlt className="me-2" /> Start Date
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="date"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      className="rounded-3"
+                      required
+                    />
+                  </motion.div>
+                </Form.Group>
+              </Col>
 
-          {/* Budget */}
-          <div className="mb-4">
-            <label className="form-label">Budget</label>
-            <input
-              type="text"
-              name="budget"
-              value={formData.budget}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Enter your budget in INR"
-            />
-          </div>
+              {/* End Date */}
+              <Col md={6} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaCalendarAlt className="me-2" /> End Date
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="date"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      className="rounded-3"
+                      required
+                    />
+                  </motion.div>
+                </Form.Group>
+              </Col>
+            </Row>
 
-          {/* Submit Button */}
-          <button type="submit" className="btn btn-primary w-100">Build Package</button>
-        </form>
-      </div>
-    </div>
+            <Row>
+              {/* Number of People */}
+              <Col md={6} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaUsers className="me-2" /> Number of People
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="number"
+                      name="numPeople"
+                      value={formData.numPeople}
+                      onChange={handleChange}
+                      placeholder="Enter number of people"
+                      className="rounded-3"
+                      min="1"
+                      required
+                    />
+                  </motion.div>
+                </Form.Group>
+              </Col>
+
+              {/* Budget */}
+              <Col md={6} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaWallet className="me-2" /> Budget (INR)
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="text"
+                      name="budget"
+                      value={formData.budget}
+                      onChange={handleChange}
+                      placeholder="e.g., 50000"
+                      className="rounded-3"
+                      required
+                    />
+                  </motion.div>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Dietary Restrictions */}
+            <Row>
+              <Col md={12} className="mb-4">
+                <Form.Group>
+                  <Form.Label className="d-flex align-items-center">
+                    <FaUtensils className="me-2" /> Dietary Restrictions
+                  </Form.Label>
+                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                    <Form.Control
+                      type="text"
+                      name="diet"
+                      value={formData.diet}
+                      onChange={handleChange}
+                      placeholder="e.g., Vegan, Gluten-free"
+                      className="rounded-3"
+                    />
+                  </motion.div>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Activity Preferences */}
+            <Form.Group className="mb-4">
+              <Form.Label className="d-flex align-items-center">
+                <FaMapSigns className="me-2" /> Activity Preferences
+              </Form.Label>
+              <Row>
+                {activities.map((activity, i) => (
+                  <Col xs={6} md={4} key={i} className="mb-2">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.2 }}
+                      className="form-check p-2 rounded bg-light"
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        value={activity}
+                        checked={formData.preferences.includes(activity)}
+                        onChange={handleCheckboxChange}
+                        name="preferences"
+                        id={`pref-${i}`}
+                        label={activity}
+                      />
+                    </motion.div>
+                  </Col>
+                ))}
+              </Row>
+            </Form.Group>
+
+            {/* Travel Goals */}
+            <Form.Group className="mb-4">
+              <Form.Label className="d-flex align-items-center">
+                <FaGlobe className="me-2" /> Travel Goals
+              </Form.Label>
+              <Row>
+                {travelGoals.map((goal, i) => (
+                  <Col xs={6} md={4} key={i} className="mb-2">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.2 }}
+                      className="form-check p-2 rounded bg-light"
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        value={goal}
+                        checked={formData.goals.includes(goal)}
+                        onChange={handleCheckboxChange}
+                        name="goals"
+                        id={`goal-${i}`}
+                        label={goal}
+                      />
+                    </motion.div>
+                  </Col>
+                ))}
+              </Row>
+            </Form.Group>
+
+            {/* Submit Button */}
+            <motion.div
+              className="build-package-btn-container"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Button
+                type="submit"
+                className={responseState === responseStates.loading ? "travel-loading-btn" : "build-package-btn"}
+                disabled={responseState === responseStates.loading}
+              >
+                {responseState === responseStates.loading ? "" : "Build Your Package"}
+              </Button>
+            </motion.div>
+          </Form>
+        </Card>
+      </motion.div>
+    </Container>
   );
 };
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import { Card, Button, Container, Row, Col, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Card, Container, Row, Col, Alert, Spinner, Badge, ProgressBar } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaHotel, FaUtensils, FaMapSigns, FaCheckCircle, FaPlane, FaGlobe, FaWallet, FaList } from 'react-icons/fa';
+import './ItineraryViewer.css'; // Custom CSS for additional styling
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
 
@@ -93,138 +95,327 @@ const ItineraryViewer = () => {
     setTripData(updated);
   };
 
+  // Calculate itinerary summary
+  const calculateSummary = () => {
+    if (!tripData?.itinerary) return { totalDays: 0, totalCost: 0, locations: [], totalActivities: 0, totalMeals: 0 };
+
+    const totalDays = tripData.itinerary.length;
+    const locations = [...new Set(tripData.itinerary.map(day => day.location).filter(Boolean))];
+    const totalActivities = tripData.itinerary.reduce((sum, day) => sum + (day.activities?.length || 0), 0);
+    const totalMeals = tripData.itinerary.reduce((sum, day) => sum + (day.meals?.length || 0), 0);
+    
+    // Calculate total cost (assuming costEstimate is a number; adjust if it's a string)
+    const totalCost = tripData.itinerary.reduce((sum, day) => {
+      const cost = parseFloat(day.costEstimate) || 0;
+      return sum + cost;
+    }, 0);
+
+    return {
+      totalDays,
+      totalCost: totalCost.toFixed(2),
+      locations,
+      totalActivities,
+      totalMeals
+    };
+  };
+
+  const summary = calculateSummary();
+
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" role="status" />
-      </div>
+      <motion.div
+        className="text-center mt-5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Spinner animation="border" role="status" style={{ color: '#007bff' }} />
+        <p className="mt-2" style={{ color: '#2c3e50' }}>Crafting your adventure...</p>
+      </motion.div>
     );
   }
 
-  if (error) return <Alert variant="danger">{error}</Alert>;
+  if (error) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+        <Alert variant="danger" className="rounded-3 shadow-sm">
+          {error}
+        </Alert>
+      </motion.div>
+    );
+  }
 
   const itinerary = Array.isArray(tripData?.itinerary) ? tripData.itinerary : [];
 
   return (
     <Container className="my-5">
-      <h2 className="text-center fw-bold mb-4" style={{ fontSize: '2.5rem', color: '#2c3e50' }}>
-        ✈ Your Dream Itinerary
-      </h2>
+      <motion.h2
+        className="text-center fw-bold mb-5"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        style={{ color: '#2c3e50', fontSize: '2.8rem' }}
+      >
+        ✈ Your Travel Adventure
+      </motion.h2>
 
-      {itinerary.map((dayData, dayIndex) => (
-        <Card key={dayIndex} className="mb-4 shadow-lg border-0 rounded-4">
-          <Card.Header className="bg-white p-0 rounded-top">
-            {dayData.locationImg && (
-              <img
-                src={dayData.locationImg}
-                alt={dayData.location}
-                className="img-fluid rounded-top"
-                style={{ height: '500px', objectFit: 'cover', width: '100%' }}
-              />
-            )}
-            <div className="p-3 bg-light d-flex justify-content-between align-items-center">
-              <div>
-                <h5 className="mb-0">🌅 Day {dayIndex + 1} - {dayData?.date ?? ''}</h5>
-              </div>
-              <div className="d-flex gap-2 align-items-center">
-                <Badge bg="light" text="dark">📍 {dayData?.location ?? ''}</Badge>
-                <Badge bg="warning" text="dark">🔢 Day {dayData?.day ?? dayIndex + 1}</Badge>
-              </div>
-            </div>
-          </Card.Header>
-
-          <Card.Body className="p-4">
-            <Row className="mb-4">
-              <Col md={6}>
-                <h6 className="text-primary mb-2">🏨 Accommodation</h6>
-                {dayData.accommodationImg && (
-                  <img
-                    src={dayData.accommodationImg}
-                    alt="Accommodation"
-                    className="img-fluid rounded-3 mb-2"
-                    style={{ height: '500px', objectFit: 'cover', width: '100%' }}
-                  />
-                )}
-                <Card className="border-0 bg-light shadow-sm p-3 rounded-3">
-                  <p className="mb-1"><strong>{dayData.accommodation?.name ?? ''}</strong> ({dayData.accommodation?.type ?? ''})</p>
-                  <p className="mb-1">💰 {dayData.accommodation?.estimatedCost ?? ''} {dayData.accommodation?.currency ?? ''}</p>
-                  <small className="text-muted">{dayData.accommodation?.notes ?? ''}</small>
-                </Card>
-              </Col>
-
-              <Col md={6}>
-                <h6 className="text-success mb-2">🚗 Transport</h6>
-                {Array.isArray(dayData.transport) && dayData.transport.length > 0 ? dayData.transport.map((t, i) => (
-                  <Card key={i} className="border-0 bg-light shadow-sm p-2 mb-2 rounded-3">
-                    <p className="mb-1"><strong>{t.mode ?? ''}</strong>: {t.details ?? ''}</p>
-                    <small className="text-muted">💸 {t.estimatedCost ?? ''} {t.currency ?? ''}</small>
-                  </Card>
-                )) : <p>No transport info.</p>}
-              </Col>
-            </Row>
-
-            <Row className="mb-4">
-              <Col md={6}>
-                <h6 className="text-danger mb-2">🍽 Meals</h6>
-                {Array.isArray(dayData.meals) && dayData.meals.length > 0 ? dayData.meals.map((meal, i) => (
-                  <Card key={i} className="border-0 bg-light shadow-sm p-2 mb-2 rounded-3">
-                    {meal.img && (
-                      <img
-                        src={meal.img}
-                        alt={meal.type}
-                        className="img-fluid rounded-3 mb-2"
-                        style={{ height: '140px', objectFit: 'cover', width: '100%' }}
-                      />
-                    )}
-                    <p className="mb-1"><strong>{meal.type ?? ''}</strong>: {meal.description ?? ''}</p>
-                    <small className="text-muted">💵 {meal.cost ?? ''} {meal.currency ?? ''}</small>
-                    <br />
-                    <small className="text-muted">{meal.notes ?? ''}</small>
-                  </Card>
-                )) : <p>No meals planned.</p>}
-              </Col>
-
-              <Col md={6}>
-                <h6 className="text-warning mb-2">🎯 Activities</h6>
-                {Array.isArray(dayData.activities) && dayData.activities.length > 0 ? dayData.activities.map((act, i) => (
-                  <Card key={i} className="border-0 bg-light shadow-sm p-2 mb-3 rounded-3">
-                    {act.img && (
-                      <img
-                        src={act.img}
-                        alt={act.type}
-                        className="img-fluid rounded-3 mb-2"
-                        style={{ height: '140px', objectFit: 'cover', width: '100%' }}
-                      />
-                    )}
-                    <p className="mb-1"><strong>{act.type ?? ''}</strong>: {act.description ?? ''}</p>
-                    <small className="text-muted">⏱ {act.duration ?? ''} | 📝 {act.notes ?? ''}</small>
-                    <div className="mt-2">
-                      <Button
-                        size="sm"
-                        variant={act.status === 'Done' ? 'success' : 'outline-secondary'}
-                        onClick={() => toggleActivityStatus(dayIndex, i)}
-                      >
-                        {act.status === 'Done' ? '✅ Done' : 'Mark as Done'}
-                      </Button>
+      <AnimatePresence>
+        {itinerary.map((dayData, dayIndex) => (
+          <motion.div
+            key={dayIndex}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, delay: dayIndex * 0.2 }}
+          >
+            <Card className="mb-4 shadow-lg border-0 rounded-4 itinerary-card">
+              <Card.Header className="bg-transparent p-0 rounded-top">
+                {dayData.locationImg && (
+                  <div className="image-container">
+                    <img
+                      src={dayData.locationImg}
+                      alt={dayData.location}
+                      className="img-fluid rounded-top"
+                      style={{ height: '400px', objectFit: 'cover', width: '100%' }}
+                    />
+                    <div className="image-overlay">
+                      <h3 className="text-white mb-0">Day {dayIndex + 1}</h3>
+                      <p className="text-white">{dayData?.location ?? ''}</p>
                     </div>
-                  </Card>
-                )) : <p>No activities yet.</p>}
+                  </div>
+                )}
+                <div className="p-3 bg-light d-flex justify-content-between align-items-center">
+                  <Badge bg="primary" className="rounded-pill">
+                    📅 {dayData?.date ?? ''}
+                  </Badge>
+                  <Badge bg="info" className="rounded-pill">
+                    🔢 Day {dayData?.day ?? dayIndex + 1}
+                  </Badge>
+                </div>
+              </Card.Header>
+
+              <Card.Body className="p-4">
+                <Row className="mb-4">
+                  <Col md={6}>
+                    <h5 className="section-title">
+                      <FaHotel className="me-2" /> Accommodation
+                    </h5>
+                    {dayData.accommodationImg && (
+                      <motion.img
+                        src={dayData.accommodationImg}
+                        alt="Accommodation"
+                        className="img-fluid rounded-3 mb-3"
+                        style={{ height: '200px', objectFit: 'cover', width: '100%' }}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                    <Card className="border-0 bg-light shadow-sm p-3 rounded-3">
+                      <p className="mb-1 fw-bold">{dayData.accommodation?.name ?? ''}</p>
+                      <p className="mb-1 text-muted">
+                        {dayData.accommodation?.type ?? ''} | 💰 {dayData.accommodation?.estimatedCost ?? ''}{' '}
+                        {dayData.accommodation?.currency ?? ''}
+                      </p>
+                      <small className="text-muted">{dayData.accommodation?.notes ?? ''}</small>
+                    </Card>
+                  </Col>
+
+                  <Col md={6}>
+                    <h5 className="section-title">
+                      <FaPlane className="me-2" /> Transport
+                    </h5>
+                    {Array.isArray(dayData.transport) && dayData.transport.length > 0 ? (
+                      dayData.transport.map((t, i) => (
+                        <motion.div
+                          key={i}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Card className="border-0 bg-light shadow-sm p-3 mb-2 rounded-3">
+                            <p className="mb-1 fw-bold">{t.mode ?? ''}</p>
+                            <p className="mb-1 text-muted">{t.details ?? ''}</p>
+                            <small className="text-muted">
+                              💸 {t.estimatedCost ?? ''} {t.currency ?? ''}
+                            </small>
+                          </Card>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <p className="text-muted">No transport details available.</p>
+                    )}
+                  </Col>
+                </Row>
+
+                <Row className="mb-4">
+                  <Col md={6}>
+                    <h5 className="section-title">
+                      <FaUtensils className="me-2" /> Meals
+                    </h5>
+                    {Array.isArray(dayData.meals) && dayData.meals.length > 0 ? (
+                      dayData.meals.map((meal, i) => (
+                        <motion.div
+                          key={i}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Card className="border-0 bg-light shadow-sm p-3 mb-3 rounded-3">
+                            {meal.img && (
+                              <img
+                                src={meal.img}
+                                alt={meal.type}
+                                className="img-fluid rounded-3 mb-2"
+                                style={{ height: '150px', objectFit: 'cover', width: '100%' }}
+                              />
+                            )}
+                            <p className="mb-1 fw-bold">{meal.type ?? ''}</p>
+                            <p className="mb-1 text-muted">{meal.description ?? ''}</p>
+                            <small className="text-muted">
+                              💵 {meal.cost ?? ''} {meal.currency ?? ''} | {meal.notes ?? ''}
+                            </small>
+                          </Card>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <p className="text-muted">No meals planned for this day.</p>
+                    )}
+                  </Col>
+
+                  <Col md={6}>
+                    <h5 className="section-title">
+                      <FaMapSigns className="me-2" /> Activities
+                    </h5>
+                    {Array.isArray(dayData.activities) && dayData.activities.length > 0 ? (
+                      dayData.activities.map((act, i) => (
+                        <motion.div
+                          key={i}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Card className="border-0 bg-light shadow-sm p-3 mb-3 rounded-3">
+                            {act.img && (
+                              <img
+                                src={act.img}
+                                alt={act.type}
+                                className="img-fluid rounded-3 mb-2"
+                                style={{ height: '150px', objectFit: 'cover', width: '100%' }}
+                              />
+                            )}
+                            <p className="mb-1 fw-bold">{act.type ?? ''}</p>
+                            <p className="mb-1 text-muted">{act.description ?? ''}</p>
+                            <small className="text-muted">
+                              ⏱ {act.duration ?? ''} | 📝 {act.notes ?? ''}
+                            </small>
+                            <motion.button
+                              className={`btn mt-2 ${
+                                act.status === 'Done' ? 'btn-success' : 'btn-outline-primary'
+                              }`}
+                              onClick={() => toggleActivityStatus(dayIndex, i)}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {act.status === 'Done' ? (
+                                <>
+                                  <FaCheckCircle className="me-1" /> Completed
+                                </>
+                              ) : (
+                                'Mark as Done'
+                              )}
+                            </motion.button>
+                          </Card>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <p className="text-muted">No activities planned.</p>
+                    )}
+                  </Col>
+                </Row>
+
+                <Row>
+                  <Col md={6}>
+                    <h5 className="section-title">💰 Total Estimate</h5>
+                    <p className="fs-4 fw-bold text-primary">
+                      {dayData?.costEstimate ?? ''} {dayData.accommodation?.currency ?? ''}
+                    </p>
+                  </Col>
+                  <Col md={6}>
+                    <h5 className="section-title">📝 Notes</h5>
+                    <p className="text-muted">{dayData?.notes ?? 'No additional notes.'}</p>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Itinerary Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card className="mt-5 shadow-lg border-0 rounded-4 itinerary-card">
+          <Card.Header className="bg-primary text-white p-3 rounded-top">
+            <h3 className="mb-0 d-flex align-items-center">
+              <FaList className="me-2" /> Itinerary Summary
+            </h3>
+          </Card.Header>
+          <Card.Body className="p-4">
+            <Row>
+              <Col md={4} className="mb-3">
+                <div className="summary-item">
+                  <FaGlobe className="me-2 text-primary" size={24} />
+                  <div>
+                    <h5 className="mb-1">Locations Visited</h5>
+                    <p className="text-muted">
+                      {summary.locations.length > 0 ? summary.locations.join(', ') : 'None'}
+                    </p>
+                  </div>
+                </div>
+              </Col>
+              <Col md={4} className="mb-3">
+                <div className="summary-item">
+                  <FaWallet className="me-2 text-primary" size={24} />
+                  <div>
+                    <h5 className="mb-1">Total Estimated Cost</h5>
+                    <p className="text-muted">
+                      {summary.totalCost} {itinerary[0]?.accommodation?.currency ?? ''}
+                    </p>
+                  </div>
+                </div>
+              </Col>
+              <Col md={4} className="mb-3">
+                <div className="summary-item">
+                  <FaMapSigns className="me-2 text-primary" size={24} />
+                  <div>
+                    <h5 className="mb-1">Total Days</h5>
+                    <p className="text-muted">{summary.totalDays} {summary.totalDays === 1 ? 'Day' : 'Days'}</p>
+                  </div>
+                </div>
               </Col>
             </Row>
-
             <Row>
-              <Col md={6}>
-                <h6 className="text-info">💰 Estimated Total</h6>
-                <p className="fs-5 fw-bold">{dayData?.costEstimate ?? ''} {dayData.accommodation?.currency ?? ''}</p>
+              <Col md={6} className="mb-3">
+                <div className="summary-item">
+                  <FaMapSigns className="me-2 text-primary" size={24} />
+                  <div>
+                    <h5 className="mb-1">Total Activities</h5>
+                    <p className="text-muted">{summary.totalActivities} Planned</p>
+                  </div>
+                </div>
               </Col>
-              <Col md={6}>
-                <h6 className="text-secondary">📝 Extra Notes</h6>
-                <p>{dayData?.notes ?? ''}</p>
+              <Col md={6} className="mb-3">
+                <div className="summary-item">
+                  <FaUtensils className="me-2 text-primary" size={24} />
+                  <div>
+                    <h5 className="mb-1">Total Meals</h5>
+                    <p className="text-muted">{summary.totalMeals} Planned</p>
+                  </div>
+                </div>
               </Col>
             </Row>
           </Card.Body>
         </Card>
-      ))}
+      </motion.div>
     </Container>
   );
 };

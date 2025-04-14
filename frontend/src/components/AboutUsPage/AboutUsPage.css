@@ -1,0 +1,153 @@
+/* Page wrapper */
+.about-us-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+  }
+  
+  /* Hero Section */
+  .hero-section {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+      url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+    padding: 150px 0;
+    position: relative;
+  }
+  
+  .hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .hero-content h1 {
+    color: #ffffff;
+    font-size: 3.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .hero-content .MuiTypography-h5 {
+    color: #e9ecef;
+    font-size: 1.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .hero-cta {
+    transition: all 0.3s ease;
+  }
+  
+  .hero-cta:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Value Cards */
+  .value-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #ffffff;
+  }
+  
+  .value-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .value-card h3 {
+    color: #2c3e50;
+    font-size: 1.25rem;
+  }
+  
+  .value-card .MuiTypography-body2 {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  
+  /* Team Cards */
+  .team-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #ffffff;
+  }
+  
+  .team-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .team-image {
+    transition: transform 0.3s ease;
+  }
+  
+  .team-card:hover .team-image {
+    transform: scale(1.05);
+  }
+  
+  .team-card h3 {
+    color: #2c3e50;
+    font-size: 1.25rem;
+  }
+  
+  .team-card .MuiTypography-body2 {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  
+  /* Mission Image */
+  .mission-image {
+    transition: transform 0.3s ease;
+  }
+  
+  .mission-image:hover {
+    transform: scale(1.02);
+  }
+  
+  /* General Text and Icons */
+  .MuiTypography-h3,
+  .MuiTypography-h4,
+  .MuiTypography-h6 {
+    color: #2c3e50;
+  }
+  
+  .MuiTypography-body1,
+  .MuiTypography-body2 {
+    color: #6c757d;
+  }
+  
+  svg {
+    color: #2c3e50;
+  }
+  
+  /* Divider */
+  .MuiDivider-root {
+    border-color: #e9ecef;
+  }
+  
+  /* Contact Section */
+  .MuiBox-root {
+    background: #e9ecef;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 100px 0;
+    }
+  
+    .hero-content h1 {
+      font-size: 2.5rem;
+    }
+  
+    .hero-content .MuiTypography-h5 {
+      font-size: 1.25rem;
+    }
+  
+    .hero-cta {
+      padding: 10px 20px;
+      font-size: 1rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .team-image {
+      height: 150px;
+    }
+  
+    .mission-image {
+      max-height: 200px;
+    }
+  }

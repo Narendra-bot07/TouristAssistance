@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "./Header.css"
 
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -69,7 +70,7 @@ const Header = () => {
                   </>
                 ) : (
                   <li className="nav-item dropdown mx-2 hover-dropdown">
-                    <button className="btn btn-light dropdown-toggle rounded-pill px-4 py-2" style={buttonStyle}>
+                    <button className="btn btn-light dropdown-toggle rounded-pill px-4 py-2 border-grey" style={buttonStyle}>
                       {username} 🧳
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end shadow">

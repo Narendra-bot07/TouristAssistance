@@ -1,0 +1,170 @@
+/* Container for the submit button */
+.build-package-btn-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+  
+  /* Default button style */
+  .build-package-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    background: linear-gradient(90deg, #007bff, #00b7eb);
+    border: none;
+    border-radius: 25px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .build-package-btn:hover {
+    background: linear-gradient(90deg, #0056b3, #0096c7);
+    transform: translateY(-2px);
+  }
+  
+  .build-package-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  /* Loading button style */
+  .travel-loading-btn {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    background: linear-gradient(90deg, #3a6978, #3e758c);
+    border: none;
+    border-radius: 25px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: center;
+    cursor: not-allowed;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .travel-loading-btn:disabled {
+    opacity: 0.8;
+  }
+  
+  .travel-loading-btn::before {
+    content: "✈️";
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.4em;
+    animation: flyAcross 1.5s infinite linear;
+  }
+  
+  .travel-loading-btn::after {
+    content: "Building Itinerary...";
+    display: inline-block;
+    animation: pulseText 1.5s infinite ease-in-out;
+  }
+  
+  /* Form elements */
+  .form-control {
+    border: 1px solid #ced4da;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    color: #2c3e50;
+  }
+  
+  .form-control::placeholder {
+    color: #6c757d;
+  }
+  
+  /* Checkbox styles */
+  .form-check {
+    transition: all 0.3s ease;
+  }
+  
+  .form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+  
+  .form-check-label {
+    color: #2c3e50;
+    font-size: 0.95rem;
+  }
+  
+  /* Card styles */
+  .card {
+    background: #ffffff;
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Animations */
+  @keyframes flyAcross {
+    0% {
+      left: -20px;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+  
+  @keyframes pulseText {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  
+  /* Labels and icons */
+  label {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+  
+  h2 {
+    color: #2c3e50;
+  }
+  
+  .text-primary,
+  .form-check-input,
+  .form-check-label,
+  label > svg {
+    color: #2c3e50 !important;
+  }
+  
+  /* Alert */
+  .alert-danger {
+    background-color: #dc3545;
+    color: #ffffff;
+    border: none;
+  }
+  
+  /* Checkbox background */
+  .bg-light {
+    background-color: #e9ecef !important;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+    .build-package-btn,
+    .travel-loading-btn {
+      max-width: 100%;
+    }
+  }

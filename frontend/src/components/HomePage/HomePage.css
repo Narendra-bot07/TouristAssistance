@@ -1,0 +1,121 @@
+/* Homepage wrapper */
+.homepage {
+    background: #f8f9fa;
+    min-height: 100vh;
+  }
+  
+  /* Hero Section */
+  .hero-section-home {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+      url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+    padding: 150px 0;
+    position: relative;
+  }
+  
+  .hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .hero-content h1 {
+    color: #ffffff;
+    font-size: 3.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .hero-content p {
+    color: #e9ecef;
+    font-size: 1.25rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .hero-cta {
+    background: linear-gradient(90deg, #007bff, #00b7eb);
+    border: none;
+    padding: 12px 30px;
+    font-weight: 600;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .hero-cta:hover {
+    background: linear-gradient(90deg, #0056b3, #0096c7);
+    transform: translateY(-2px);
+  }
+  
+  /* Itinerary Cards */
+  .itinerary-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #ffffff;
+  }
+  
+  .itinerary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .itinerary-card img {
+    transition: transform 0.3s ease;
+  }
+  
+  .itinerary-card:hover img {
+    transform: scale(1.05);
+  }
+  
+  .itinerary-card .card-title {
+    color: #2c3e50;
+    font-size: 1.5rem;
+  }
+  
+  .itinerary-card .card-text {
+    color: #6c757d;
+    font-size: 1rem;
+  }
+  
+  .itinerary-card .btn {
+    color: #007bff;
+    border-color: #007bff;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .itinerary-card .btn:hover {
+    background-color: #007bff;
+    color: #ffffff;
+  }
+  
+  /* General Text and Icons */
+  h2 {
+    color: #2c3e50;
+  }
+  
+  svg {
+    color: #2c3e50;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 100px 0;
+    }
+  
+    .hero-content h1 {
+      font-size: 2.5rem;
+    }
+  
+    .hero-content p {
+      font-size: 1rem;
+    }
+  
+    .hero-cta {
+      padding: 10px 20px;
+      font-size: 1rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .itinerary-card img {
+      height: 150px;
+    }
+  }
