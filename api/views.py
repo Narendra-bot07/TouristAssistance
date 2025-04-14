@@ -9,7 +9,7 @@ import google.generativeai as genai
 import requests
 import json
 import re
-
+from dateutil.relativedelta import relativedelta
 firebaseConfig = {
     "apiKey": "AIzaSyBvF4sctKkdQFSkkvvDyLKENJMFlaWCWQU",
     "authDomain": "coe-project-24d1c.firebaseapp.com",
@@ -34,6 +34,8 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
 
 
+
+
 @api_view(['POST'])
 def register_user(request):
     print("[DEBUG] Register endpoint hit.")
@@ -47,7 +49,7 @@ def register_user(request):
         phone = data.get('phonenumber')
         password = data.get('password')
         confirm_password = data.get('confirmPassword')
-        dob = data.get('dob')  # Added DOB field
+        dob_str = data.get('dob')  # Get DOB as string
 
         # ✅ Debug Field Values
         print("[DEBUG] username:", username)
@@ -56,22 +58,38 @@ def register_user(request):
         print("[DEBUG] phone:", phone)
         print("[DEBUG] password:", password)
         print("[DEBUG] confirm_password:", confirm_password)
-        print("[DEBUG] dob:", dob)  # Debug DOB
+        print("[DEBUG] dob:", dob_str)
 
         # ✅ Check all fields are present and not empty
-        required_fields = [username, name, email, phone, password, confirm_password, dob]  # Added dob to required fields
+        required_fields = [username, name, email, phone, password, confirm_password, dob_str]
         if any(field is None or str(field).strip() == '' for field in required_fields):
             return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Validate date format (basic validation)
+        # ✅ Validate date format and calculate age
         try:
-            datetime.strptime(dob, '%Y-%m-%d')  # Validate date format
+            dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+            today = date.today()
+            age = relativedelta(today, dob).years
+            
+            # Validate minimum age (example: 13 years)
+            if age < 13:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "You must be at least 13 years old to register"
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
         except ValueError:
-            return JsonResponse({"status": "error", "message": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({
+                "status": "error",
+                "message": "Invalid date format. Use YYYY-MM-DD"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Password match check
         if password.strip() != confirm_password.strip():
-            return JsonResponse({"status": "error", "message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({
+                "status": "error",
+                "message": "Passwords do not match"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Check if user exists
         users = db.child("users").get()
@@ -79,29 +97,52 @@ def register_user(request):
             for user in users.each():
                 user_data = user.val()
                 if user_data.get("email") == email:
-                    return JsonResponse({"status": "error", "message": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "Email already registered"
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 if user_data.get("phone") == phone:
-                    return JsonResponse({"status": "error", "message": "Phone number already registered"}, status=status.HTTP_400_BAD_REQUEST)
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "Phone number already registered"
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 if user_data.get("username") == username:
-                    return JsonResponse({"status": "error", "message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "Username already taken"
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Save new user
+        # ✅ Save new user with age
         result = db.child("users").push({
             "username": username,
             "name": name,
             "email": email,
             "phone": phone,
-            "password": password,  # ❗ hash this in production!
-            "dob": dob,  # Added DOB field
-            "created_at": datetime.now().isoformat()  # Optional: add registration timestamp
+            "password": password,  # ❗ Remember to hash in production!
+            "dob": dob_str,
+            "age": age,  # Store calculated age
+            "created_at": datetime.now().isoformat(),
+            "last_updated": datetime.now().isoformat()
         })
 
         print("[DEBUG] Firebase push result:", result)
-        return JsonResponse({"status": "success", "message": "User registered successfully"}, status=status.HTTP_201_CREATED)
+        return JsonResponse({
+            "status": "success",
+            "message": "User registered successfully",
+            "data": {
+                "username": username,
+                "email": email,
+                "age": age
+            }
+        }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         print("[ERROR]", str(e))
-        return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({
+            "status": "error",
+            "message": "Registration failed",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def login_user(request):
@@ -111,7 +152,7 @@ def login_user(request):
             data = request.data
             print("[DEBUG] Received data:", data)
 
-            identifier = data.get('identifier')  # can be email or username
+            identifier = data.get('identifier')  
             password = data.get('password')
 
             if not identifier or not password:
