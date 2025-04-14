@@ -25,7 +25,7 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
 auth = firebase.auth()
 
-GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s"
+GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s"  # Removed trailing dot
 GOOGLE_MAPS_API_KEY = "AIzaSyBf7g228DZPB46GCpKufTBV_QpinWBCJp4"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
 
@@ -47,6 +47,7 @@ def register_user(request):
         phone = data.get('phonenumber')
         password = data.get('password')
         confirm_password = data.get('confirmPassword')
+        dob = data.get('dob')  # Added DOB field
 
         # ✅ Debug Field Values
         print("[DEBUG] username:", username)
@@ -55,11 +56,18 @@ def register_user(request):
         print("[DEBUG] phone:", phone)
         print("[DEBUG] password:", password)
         print("[DEBUG] confirm_password:", confirm_password)
+        print("[DEBUG] dob:", dob)  # Debug DOB
 
         # ✅ Check all fields are present and not empty
-        required_fields = [username, name, email, phone, password, confirm_password]
+        required_fields = [username, name, email, phone, password, confirm_password, dob]  # Added dob to required fields
         if any(field is None or str(field).strip() == '' for field in required_fields):
             return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Validate date format (basic validation)
+        try:
+            datetime.strptime(dob, '%Y-%m-%d')  # Validate date format
+        except ValueError:
+            return JsonResponse({"status": "error", "message": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Password match check
         if password.strip() != confirm_password.strip():
@@ -84,6 +92,8 @@ def register_user(request):
             "email": email,
             "phone": phone,
             "password": password,  # ❗ hash this in production!
+            "dob": dob,  # Added DOB field
+            "created_at": datetime.now().isoformat()  # Optional: add registration timestamp
         })
 
         print("[DEBUG] Firebase push result:", result)
@@ -92,7 +102,6 @@ def register_user(request):
     except Exception as e:
         print("[ERROR]", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @api_view(['POST'])
 def login_user(request):

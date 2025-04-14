@@ -12,6 +12,7 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     confirmPassword: '',
+    dob: '', // Added DOB field
     acceptedTerms: false,
   });
   const [error, setError] = useState('');
@@ -41,13 +42,20 @@ export default function RegisterPage() {
       return;
     }
 
+    // Validate DOB (basic validation)
+    if (!formData.dob) {
+      alert("Please enter your date of birth");
+      return;
+    }
+
     const data = {
       username: formData.username,
       name: formData.name,
       email: formData.email,
       phonenumber: formData.phone,
       password: formData.password,
-      confirmPassword:formData.confirmPassword
+      confirmPassword: formData.confirmPassword,
+      dob: formData.dob // Added DOB to the data object
     };
 
     try {
@@ -138,6 +146,20 @@ export default function RegisterPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   required
+                />
+              </div>
+
+              {/* Added DOB Field */}
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Date of Birth</label>
+                <input
+                  name="dob"
+                  type="date"
+                  className="form-control rounded-pill"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  required
+                  max={new Date().toISOString().split('T')[0]} // Prevent future dates
                 />
               </div>
 
