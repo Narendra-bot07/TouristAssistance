@@ -6,7 +6,7 @@ import axios from 'axios';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    identifier: '', // can be email or username
+    identifier: '', 
     password: '',
   });
   const [error, setError] = useState('');
@@ -30,9 +30,8 @@ export default function LoginPage() {
 
       console.log('Login success:', response.data);
 
-      // Save actual user email from response
       localStorage.setItem('userEmail', response.data.email);
-      localStorage.setItem('userName', response.data.name);
+      localStorage.setItem('userName', response.data.username);
 
       navigate('/');
       window.location.reload();

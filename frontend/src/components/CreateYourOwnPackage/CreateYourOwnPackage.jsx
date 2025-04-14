@@ -47,7 +47,7 @@ const navigate = useNavigate();
 
     const userEmail = localStorage.getItem('userEmail');
     const userName = localStorage.getItem('userName');
-
+    console.log(userName)
     if (!userEmail || !userName) {
       alert("Please log in before creating a package.");
       return;

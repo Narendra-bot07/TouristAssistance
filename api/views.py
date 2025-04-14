@@ -117,12 +117,13 @@ def login_user(request):
 
             for user in users.each():
                 user_data = user.val()
-                if (user_data["email"] == identifier or user_data["name"] == identifier) and user_data["password"] == password:
+                if (user_data["email"] == identifier or user_data["username"] == identifier) and user_data["password"] == password:
                     print("[DEBUG] User authenticated successfully.")
                     return JsonResponse({
                         "status": "success",
                         "message": "Login successful",
                         "email": user_data["email"],
+                        "username":user_data["username"],
                         "name": user_data["name"]
                     }, status=200)
 
@@ -159,32 +160,47 @@ def get_user_by_email(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+
+
 @api_view(['POST'])
 def create_package(request):
     print("[DEBUG] Create Package endpoint hit.")
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
+    try:
+        data = request.data
+        print("[DEBUG] Received data:", data)
+
+        username = data.get('username')
+        user_input = data.get('packageDetails')
+
+        if not username or not user_input:
+            print("[DEBUG] Missing username or packageDetails")
+            return JsonResponse({
+                "status": "error",
+                "message": "Username and package details are required"
+            }, status=400)
+
+        # 🔄 Fix Date Format & Compute Duration
+        def fix_year(year): return '20' + year if len(year) == 2 else year
         try:
-            data = request.data
-            print("[DEBUG] Received data:", data)
-
-            username = data.get('username')
-            user_input = data.get('packageDetails')
-
-            if not all([username, user_input]):
-                print("[DEBUG] Missing username or packageDetails")
-                return JsonResponse({"status": "error", "message": "Username and package details are required"}, status=400)
-
-            # Date handling
-            def fix_year(year): return '20' + year if len(year) == 2 else year
             sd = user_input['startDate'].split('-')
             ed = user_input['endDate'].split('-')
             sd[2] = fix_year(sd[2])
             ed[2] = fix_year(ed[2])
-            user_input['numDays'] = (datetime.strptime('-'.join(ed), "%d-%m-%Y") - datetime.strptime('-'.join(sd), "%d-%m-%Y")).days
+            start_date = datetime.strptime('-'.join(sd), "%d-%m-%Y")
+            end_date = datetime.strptime('-'.join(ed), "%d-%m-%Y")
+            user_input['numDays'] = (end_date - start_date).days
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": f"Invalid date format: {str(e)}"
+            }, status=400)
 
-            # 🌍 Updated Prompt for Gemini
-            prompt = f"""
+        # 🌍 Prompt to Gemini
+        prompt = f"""
 Create a detailed travel itinerary in JSON format with the following user-provided details:
 
 - Starting point: {user_input['startplace']}
@@ -202,102 +218,56 @@ Create a detailed travel itinerary in JSON format with the following user-provid
 Instructions:
 1. Return ONLY valid JSON. Do NOT include any markdown or code formatting.
 2. For each day of the trip, include the following exact format:
-3. Based on the destination change the type of currency.
-[
-  {{
-    "day": number,
-    "date": string,
-    "location": string,
-    "activities": [
-      {{
-        "description": string,
-        "type": string,
-        "duration": string,
-        "notes": string
-      }}
-    ],
-    "transport": [
-      {{
-        "mode": string,
-        "estimatedCost": number,
-        "currency": string,
-        "details": string
-      }}
-    ],
-    "accommodation": {{
-      "name": string,
-      "type": string,
-      "estimatedCost": number,
-      "currency": string,
-      "notes": string
-    }},
-    "meals": [
-      {{
-        "type": string,
-        "description": string,
-        "cost": number,
-        "currency": string,
-        "notes": string
-      }}
-    ],
-    "costEstimate": number,
-    "notes": string
-  }}
-]
-
+[ {{ "day": number, "date": string, "location": string, "activities": [ {{ "description": string, "type": string, "duration": string, "notes": string }} ], "transport": [ {{ "mode": string, "estimatedCost": number, "currency": string, "details": string }} ], "accommodation": {{ "name": string, "type": string, "estimatedCost": number, "currency": string, "notes": string }}, "meals": [ {{ "type": string, "description": string, "cost": number, "currency": string, "notes": string }} ], "costEstimate": number, "notes": string }} ]
 3. Make the itinerary realistic and appropriate for a {user_input['budget']} budget.
 4. Recommend culturally appropriate, location-specific activities and food.
 5. Include estimated costs wherever possible.
 6. Respond ONLY with valid JSON following this exact structure.
 """
 
-            print("[DEBUG] Sending prompt to Gemini...")
-            gemini_response = model.generate_content(prompt)
+        print("[DEBUG] Sending prompt to Gemini...")
+        gemini_response = model.generate_content(prompt)
+        response_text = gemini_response.text
+        clean_response = response_text.replace('```json', '').replace('```', '').strip()
 
-            # Extract and clean the response
-            response_text = gemini_response.text
-            clean_response = response_text.replace('```json', '').replace('```', '').strip()
-
-            # Parse to validate it's proper JSON
+        try:
             itinerary = json.loads(clean_response)
-            print("[DEBUG] Successfully parsed itinerary:", itinerary)
-
-            # Save to Firebase
-            users = db.child("users").get()
-            if users is None:
-                return JsonResponse({"status": "error", "message": "No users found"}, status=404)
-
-            for user in users.each():
-                user_data = user.val()
-                if user_data["username"] == username:
-                    user_packages = user_data.get("packages", [])
-                    user_packages.append({
-                        "input": user_input,
-                        "itinerary": itinerary
-                    })
-                    db.child("users").child(user.key()).update({"packages": user_packages})
-                    return JsonResponse({
-                        "status": "success",
-                        "packageDetails": user_input,
-                        "itinerary": itinerary
-                    }, status=201)
-
-            return JsonResponse({"status": "error", "message": "User not found"}, status=404)
-
+            print("[DEBUG] Successfully parsed itinerary.")
         except json.JSONDecodeError as e:
             print("[ERROR] Failed to parse Gemini response:", e)
-            print("[DEBUG] Raw response:", gemini_response.text if 'gemini_response' in locals() else 'N/A')
             return JsonResponse({
-                "status": "error", 
-                "message": "Failed to parse itinerary",
-                "raw_response": gemini_response.text if 'gemini_response' in locals() else 'N/A'
+                "status": "error",
+                "message": "Failed to parse itinerary JSON",
+                "raw_response": response_text
             }, status=500)
 
-        except Exception as e:
-            print("[ERROR] Exception occurred:", str(e))
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        # 🔥 Save to Firebase
+        users = db.child("users").get()
+        if users is None:
+            return JsonResponse({"status": "error", "message": "No users found in database"}, status=404)
 
-    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+        for user in users.each():
+            user_data = user.val()
+            if user_data.get("username") == username:
+                user_packages = user_data.get("packages", [])
+                user_packages.append({
+                    "input": user_input,
+                    "itinerary": itinerary
+                })
+                db.child("users").child(user.key()).update({"packages": user_packages})
+                print("[DEBUG] Successfully saved itinerary for user:", username)
+
+                return JsonResponse({
+                    "status": "success",
+                    "packageDetails": user_input,
+                    "itinerary": itinerary
+                }, status=201)
+
+        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+
+    except Exception as e:
+        print("[ERROR] Exception occurred:", str(e))
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 @api_view(['GET'])

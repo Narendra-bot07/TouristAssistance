@@ -27,7 +27,7 @@ const Header = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('userEmail');
+    localStorage.clear(); // Flush everything in localStorage
     setIsLoggedIn(false);
     navigate('/');
     window.location.reload();
