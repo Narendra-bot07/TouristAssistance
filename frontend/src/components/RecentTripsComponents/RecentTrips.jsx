@@ -1,38 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const RecentTrips = () => {
-  const trips = [
-    {
-      destination: 'Paris, France',
-      date: '2025-03-12',
-      details: 'A wonderful trip exploring the Eiffel Tower and museums.',
-    },
-    {
-      destination: 'Tokyo, Japan',
-      date: '2025-03-25',
-      details: 'An exciting trip to experience the culture and technology.',
-    },
-    {
-      destination: 'New York City, USA',
-      date: '2025-04-01',
-      details: 'Visited Times Square and Central Park.',
-    },
-  ];
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const username = localStorage.getItem('userName')
+
+  useEffect(() => {
+    const fetchRecentPackages = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/recent-packages/${username}/`);
+        if (response.data.status === 'success') {
+          setPackages(response.data.recentPackages);
+        } else {
+          setError(response.data.message || 'Failed to fetch packages');
+        }
+      } catch (err) {
+        setError('Error fetching data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentPackages();
+  }, []);
 
   return (
     <div className="container mt-4">
-      <h1 className="text-center my-4">Travel Planner</h1>
-      <h4>Recent Trips</h4>
-      <div className="list-group">
-        {trips.map((trip, index) => (
-          <div key={index} className="list-group-item">
-            <h5>{trip.destination}</h5>
-            <p><strong>Date:</strong> {trip.date}</p>
-            <p><strong>Details:</strong> {trip.details}</p>
-          </div>
-        ))}
-      </div>
+      <h1 className="text-center my-4">Recent Travel Packages</h1>
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <div className="alert alert-danger">{error}</div>
+      ) : (
+        <div className="row">
+          {packages.map((pkg, index) => {
+            const trip = pkg.input || {};
+            return (
+              <div key={index} className="col-md-6 mb-4">
+                <div className="card shadow-sm rounded p-3">
+                  <h5 className="card-title">
+                    From <span className="text-primary">{trip.startplace}</span> to{' '}
+                    <span className="text-success">{trip.destinationplace}</span>
+                  </h5>
+                  <p className="card-text">
+                    <strong>Start Date:</strong> {trip.startDate} <br />
+                    <strong>End Date:</strong> {trip.endDate}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

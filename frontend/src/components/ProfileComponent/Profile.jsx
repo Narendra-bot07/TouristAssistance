@@ -1,95 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const Profile = () => {
-  const [user, setUser] = useState({
-    name: "Ayrin",
-    email: "ayrin@example.com",
-    bio: "Your AI assistant, always ready to help with tech and creativity!",
-    profilePicture: "https://via.placeholder.com/150",
-    age: 25,
-    tripsPlanned: 12,
-    location: "San Francisco, CA",
-    dob: "1998-05-20",
-    phone: "+1 123 456 7890",
-    occupation: "AI Developer",
-    languages: ["English", "Spanish"],
-    hobbies: ["Traveling", "Coding", "Photography"],
-    favoriteDestinations: ["Paris", "Tokyo", "New York"],
-    travelGoals: 5,
-    travelStyle: "Adventure",
-    membership: "Gold Member - Airline XYZ",
-    upcomingTrips: ["Trip to Bali - May 2025"],
-    wishlist: ["Machu Picchu", "Great Barrier Reef"]
-  });
+const Profile = ({ username }) => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleEditProfile = () => {
-    // Logic to edit profile (e.g., open a modal or redirect to an edit page)
-    alert("Edit profile clicked");
-  };
+  useEffect(() => {
+    const username = localStorage.getItem('userName')
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/profile/${username}/`);
+        setProfile(response.data.profile);
+      } catch (err) {
+        setError("Failed to fetch data from the server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [username]);
+
+  if (loading) {
+    return <div className="text-center mt-5">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center mt-5 text-danger">{error}</div>;
+  }
 
   return (
     <div className="container mt-5">
       <div className="card shadow-sm">
         <div className="card-body text-center">
-          <img 
-            src={user.profilePicture} 
-            alt="Profile" 
-            className="rounded-circle mb-3" 
-            width="150"
-            height="150"
-          />
-          <h2>{user.name}</h2>
-          <p className="text-muted">{user.email}</p>
-          <p>{user.bio}</p>
+          <h2>{profile.name}</h2>
+          <p className="text-muted">{profile.email}</p>
 
           <div className="row mt-4">
             <div className="col-6">
-              <p><strong>Age:</strong> {user.age}</p>
+              <p><strong>Username:</strong> {profile.username}</p>
             </div>
             <div className="col-6">
-              <p><strong>Location:</strong> {user.location}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Date of Birth:</strong> {user.dob}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Phone:</strong> {user.phone}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Occupation:</strong> {user.occupation}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Languages:</strong> {user.languages.join(", ")}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Hobbies:</strong> {user.hobbies.join(", ")}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Trips Planned:</strong> {user.tripsPlanned}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Travel Style:</strong> {user.travelStyle}</p>
-            </div>
-            
-            <div className="col-6">
-              <p><strong>Upcoming Trips:</strong> {user.upcomingTrips.join(", ")}</p>
-            </div>
-            <div className="col-6">
-              <p><strong>Wishlist:</strong> {user.wishlist.join(", ")}</p>
+              <p><strong>Phone Number:</strong> {profile.number}</p>
             </div>
           </div>
 
-          <button 
-            onClick={handleEditProfile} 
-            className="btn btn-primary mt-3"
-          >
-            Edit Profile
-          </button>
+          <button className="btn btn-primary mt-3">Edit Profile</button>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Profile;

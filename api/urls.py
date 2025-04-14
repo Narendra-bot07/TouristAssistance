@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user, login_user, get_user_by_email,create_package,get_latest_itinerary,get_recent_packages
+from .views import register_user, login_user, get_user_by_email,create_package,get_latest_itinerary,get_recent_packages,get_user_profile
 
 urlpatterns = [
     path('register/', register_user),
@@ -8,5 +8,5 @@ urlpatterns = [
     path('save_trip_package/', create_package, name='save_trip_package'),
     path('get-latest-itinerary/<str:username>/',get_latest_itinerary, name='get_latest_itinerary'),
     path('recent-packages/<str:username>/', get_recent_packages, name='get_recent_packages'),
-
+    path('profile/<str:username>/',get_user_profile,name='user_profiel')
 ]

@@ -408,3 +408,41 @@ def get_recent_packages(request, username):
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@api_view(['GET'])
+def get_user_profile(request, username):
+    try:
+        # Validate input
+        if not username or not isinstance(username, str):
+            return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=400)
+
+        # Fetch users from Firebase
+        users = db.child("users").get()
+        if not users:
+            return JsonResponse({"status": "error", "message": "No users found"}, status=404)
+
+        # Search for user by username
+        user_data = None
+        for user in users.each():
+            if user.val().get("username") == username:
+                user_data = user.val()
+                break
+
+        if not user_data:
+            return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+
+        # Prepare and return the user profile with only the required fields
+        profile = {
+            "email": user_data.get("email"),
+            "username": user_data.get("username"),
+            "name": user_data.get("name"),
+            "number": user_data.get("phone"),
+        }
+
+        return JsonResponse({
+            "status": "success",
+            "profile": profile
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
