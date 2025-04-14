@@ -358,7 +358,6 @@ Instructions:
         print("[ERROR] Exception occurred:", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 @api_view(['GET'])
 def get_latest_itinerary(request, username):
     try:
@@ -394,9 +393,9 @@ def get_latest_itinerary(request, username):
         packages = user_data.get("packages", [])
         if not packages:
             return JsonResponse({
-                "status": "error",
-                "message": "No itineraries found for this user"
-            }, status=status.HTTP_404_NOT_FOUND)
+                "status": "empty",
+                "message": "You haven't visited any places yet... create your own package 💫✈️"
+            }, status=status.HTTP_200_OK)
 
         # Get latest package based on index
         latest_package = packages[-1]
@@ -455,7 +454,11 @@ def get_recent_packages(request, username):
         # Fetch the packages for the user
         packages = user_data.get("packages", [])
         if not packages:
-            return JsonResponse({"status": "error", "message": "No packages found for this user"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({
+                "status": "success",
+                "message": "You haven't visited anywhere recently",
+                "recentPackages": []
+            }, status=status.HTTP_200_OK)
 
         # Return the most recent packages (last 5)
         recent_packages = packages[-5:] if len(packages) > 5 else packages
@@ -467,6 +470,7 @@ def get_recent_packages(request, username):
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @api_view(['GET'])
@@ -698,4 +702,234 @@ def get_package_details_by_id(request, username, package_id):
         return JsonResponse({
             "status": "error",
             "message": "An internal server error occurred"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def check_active_trips(request, username):
+    try:
+        # Get current date
+        today = datetime.now().date()
+        print(f"[DEBUG] Today's date: {today}")
+        
+        # Fetch all users
+        users = db.child("users").get()
+        if users.val() is None:
+            print("[DEBUG] No users found in database")
+            return JsonResponse({
+                "status": "error",
+                "message": "No users found in database"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Find user by username
+        user_found = False
+        has_active_trip = False
+        recent_package_info = None
+        
+        for user in users.each():
+            user_data = user.val()
+            if user_data.get("username") == username:
+                user_found = True
+                packages = user_data.get("packages", [])
+                print(f"[DEBUG] Found user: {username} with {len(packages)} packages")
+                
+                if not packages:
+                    print("[DEBUG] No packages found for user")
+                    break
+                    
+                # Get the most recent package (last in the array)
+                recent_package = packages[-1]
+                package_details = recent_package.get("input", {})
+                print(f"[DEBUG] Package details: {package_details}")
+                
+                # Parse start and end dates from package details
+                try:
+                    # Get raw date strings
+                    start_date_str = package_details.get("startDate", "")
+                    end_date_str = package_details.get("endDate", "")
+                    print(f"[DEBUG] Raw dates - Start: '{start_date_str}', End: '{end_date_str}'")
+
+                    # Validate date strings
+                    if not start_date_str or not end_date_str:
+                        print("[DEBUG] Missing start or end date")
+                        return JsonResponse({
+                            "status": "error",
+                            "message": "Missing start or end date in package",
+                            "debug": {
+                                "startDateExists": bool(start_date_str),
+                                "endDateExists": bool(end_date_str)
+                            }
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    # Try parsing with different formats
+                    date_formats_to_try = [
+                        "%d-%m-%Y",  # 15-04-2025
+                        "%d-%m-%y",  # 15-04-25
+                        "%Y-%m-%d",  # 2025-04-15
+                        "%d/%m/%Y",  # 15/04/2025
+                        "%d/%m/%y"   # 15/04/25
+                    ]
+
+                    start_date = None
+                    end_date = None
+                    used_format = None
+
+                    for date_format in date_formats_to_try:
+                        try:
+                            if not start_date:
+                                start_date = datetime.strptime(start_date_str, date_format).date()
+                            if not end_date:
+                                end_date = datetime.strptime(end_date_str, date_format).date()
+                            used_format = date_format
+                            break
+                        except ValueError:
+                            continue
+
+                    if not start_date or not end_date:
+                        print("[DEBUG] Failed to parse dates with any format")
+                        return JsonResponse({
+                            "status": "error",
+                            "message": "Could not parse dates with any known format",
+                            "debug": {
+                                "startDate": start_date_str,
+                                "endDate": end_date_str,
+                                "triedFormats": date_formats_to_try
+                            }
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    print(f"[DEBUG] Successfully parsed dates using format: {used_format}")
+                    print(f"[DEBUG] Parsed dates - Start: {start_date}, End: {end_date}")
+
+                    # Check if today is within the trip dates (inclusive)
+                    date_comparison = {
+                        "today_gte_start": today >= start_date,
+                        "today_lte_end": today <= end_date
+                    }
+                    print(f"[DEBUG] Date comparison: {date_comparison}")
+
+                    if date_comparison["today_gte_start"] and date_comparison["today_lte_end"]:
+                        has_active_trip = True
+                        print("[DEBUG] Active trip found")
+                        
+                    # Prepare package info for response
+                    recent_package_info = {
+                        "startDate": start_date.strftime("%Y-%m-%d"),
+                        "endDate": end_date.strftime("%Y-%m-%d"),
+                        "destination": package_details.get("destinationplace", "Unknown"),
+                        "rawDates": {
+                            "startDate": start_date_str,
+                            "endDate": end_date_str
+                        },
+                        "usedDateFormat": used_format,
+                        "dateComparison": date_comparison
+                    }
+                    
+                except Exception as e:
+                    print(f"[ERROR] Date parsing failed: {str(e)}")
+                    return JsonResponse({
+                        "status": "error",
+                        "message": f"Date processing failed: {str(e)}",
+                        "debug": {
+                            "startDate": start_date_str,
+                            "endDate": end_date_str,
+                            "errorDetails": str(e),
+                            "today": today.strftime("%Y-%m-%d"),
+                            "packageDetails": {
+                                "destination": package_details.get("destinationplace"),
+                                "package_id": recent_package.get("package_id")
+                            }
+                        }
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                break
+
+        if not user_found:
+            print("[DEBUG] User not found")
+            return JsonResponse({
+                "status": "error",
+                "message": "User not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        response_data = {
+            "status": "success",
+            "hasActiveTrip": has_active_trip,
+            "today": today.strftime("%Y-%m-%d"),
+            "package": recent_package_info,
+            "message": "Active trip found" if has_active_trip else "No active trip"
+        }
+        print(f"[DEBUG] Final response: {response_data}")
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"[ERROR] Unexpected error: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": "Internal server error",
+            "errorDetails": str(e),
+            "debug": {
+                "timestamp": datetime.now().isoformat(),
+                "endpoint": "check_active_trips",
+                "username": username
+            }
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def get_trip_stats(request, username):
+    try:
+        # Get current date for filtering
+        today = datetime.now().date()
+        
+        # Fetch user's packages from Firebase
+        users = db.child("users").get()
+        if users.val() is None:
+            return JsonResponse({
+                "status": "error",
+                "message": "No users found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Find the specific user
+        user_data = None
+        for user in users.each():
+            if user.val().get("username") == username:
+                user_data = user.val()
+                break
+
+        if not user_data:
+            return JsonResponse({
+                "status": "error",
+                "message": "User not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        packages = user_data.get("packages", [])
+        total_trips = len(packages)
+        upcoming_trips = 0
+        completed_trips = 0
+
+        # Analyze each package
+        for package in packages:
+            package_details = package.get("input", {})
+            try:
+                # Parse dates (using the format we established earlier)
+                start_date = datetime.strptime(package_details.get("startDate"), "%d-%m-%y").date()
+                end_date = datetime.strptime(package_details.get("endDate"), "%d-%m-%y").date()
+                
+                if start_date > today:
+                    upcoming_trips += 1
+                elif end_date < today:
+                    completed_trips += 1
+            except:
+                # Skip packages with invalid dates
+                continue
+
+        return JsonResponse({
+            "status": "success",
+            "stats": {
+                "total": total_trips,
+                "upcoming": upcoming_trips,
+                "completed": completed_trips,
+                "active": total_trips - (upcoming_trips + completed_trips)
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

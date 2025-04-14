@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Card, Container, Row, Col, Alert, Spinner, Badge, ProgressBar } from 'react-bootstrap';
+import { Card, Container, Row, Col, Alert, Spinner, Badge, Button } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHotel, FaUtensils, FaMapSigns, FaCheckCircle, FaPlane, FaGlobe, FaWallet, FaList } from 'react-icons/fa';
-import './ItineraryViewer.css'; // Custom CSS for additional styling
+import { 
+  FaHotel, FaUtensils, FaMapSigns, FaCheckCircle, FaPlane, 
+  FaGlobe, FaWallet, FaList, FaArrowRight, FaArrowLeft, 
+  FaRegCalendarAlt, FaRegSun, FaRegMoon, FaPlusCircle 
+} from 'react-icons/fa';
+import { GiPathDistance } from 'react-icons/gi';
+import { useNavigate } from 'react-router-dom';
+import './ItineraryViewer.css';
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
 
@@ -20,7 +26,6 @@ const fetchUnsplashImage = async (query) => {
         Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
       }
     });
-
     return res?.data?.results?.[0]?.urls?.regular || null;
   } catch (err) {
     console.error('Unsplash error:', err);
@@ -32,6 +37,8 @@ const ItineraryViewer = () => {
   const [tripData, setTripData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchItinerary = async () => {
@@ -46,7 +53,11 @@ const ItineraryViewer = () => {
         const response = await axios.get(`http://localhost:8000/api/get-latest-itinerary/${userEmail}`);
         const data = response.data;
 
-        // 🌅 Enhance itinerary with Unsplash images
+        if (!data.itinerary || data.itinerary.length === 0) {
+          setLoading(false);
+          return;
+        }
+
         const enhancedItinerary = await Promise.all(
           data.itinerary.map(async (day) => {
             const locationImg = await fetchUnsplashImage(day.location);
@@ -62,7 +73,8 @@ const ItineraryViewer = () => {
             const activitiesWithImages = await Promise.all(
               (day.activities || []).map(async (act) => ({
                 ...act,
-                img: await fetchUnsplashImage(act.type)
+                img: await fetchUnsplashImage(act.type),
+                status: act.status || 'Not Done'
               }))
             );
 
@@ -71,7 +83,8 @@ const ItineraryViewer = () => {
               locationImg,
               accommodationImg,
               meals: mealsWithImages,
-              activities: activitiesWithImages
+              activities: activitiesWithImages,
+              status: day.status || 'Not Done'
             };
           })
         );
@@ -95,7 +108,25 @@ const ItineraryViewer = () => {
     setTripData(updated);
   };
 
-  // Calculate itinerary summary
+  const toggleDayStatus = () => {
+    const updated = { ...tripData };
+    updated.itinerary[currentDayIndex].status = 
+      updated.itinerary[currentDayIndex].status === 'Done' ? 'Not Done' : 'Done';
+    setTripData(updated);
+  };
+
+  const goToNextDay = () => {
+    if (currentDayIndex < tripData.itinerary.length - 1) {
+      setCurrentDayIndex(currentDayIndex + 1);
+    }
+  };
+
+  const goToPrevDay = () => {
+    if (currentDayIndex > 0) {
+      setCurrentDayIndex(currentDayIndex - 1);
+    }
+  };
+
   const calculateSummary = () => {
     if (!tripData?.itinerary) return { totalDays: 0, totalCost: 0, locations: [], totalActivities: 0, totalMeals: 0 };
 
@@ -103,8 +134,6 @@ const ItineraryViewer = () => {
     const locations = [...new Set(tripData.itinerary.map(day => day.location).filter(Boolean))];
     const totalActivities = tripData.itinerary.reduce((sum, day) => sum + (day.activities?.length || 0), 0);
     const totalMeals = tripData.itinerary.reduce((sum, day) => sum + (day.meals?.length || 0), 0);
-    
-    // Calculate total cost (assuming costEstimate is a number; adjust if it's a string)
     const totalCost = tripData.itinerary.reduce((sum, day) => {
       const cost = parseFloat(day.costEstimate) || 0;
       return sum + cost;
@@ -118,8 +147,6 @@ const ItineraryViewer = () => {
       totalMeals
     };
   };
-
-  const summary = calculateSummary();
 
   if (loading) {
     return (
@@ -145,10 +172,51 @@ const ItineraryViewer = () => {
     );
   }
 
-  const itinerary = Array.isArray(tripData?.itinerary) ? tripData.itinerary : [];
+  if (!tripData?.itinerary || tripData.itinerary.length === 0) {
+    return (
+      <Container className="my-5">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <Card className="shadow-lg border-0 rounded-4 p-5 no-itinerary-card">
+            <div className="no-itinerary-icon mb-4">
+              <FaGlobe size={80} className="text-primary opacity-25" />
+            </div>
+            <h2 className="mb-3 fw-bold">No Recent Itinerary Found</h2>
+            <p className="text-muted mb-4 fs-5">
+              It looks like you haven't created any travel plans yet. Let's start your adventure!
+            </p>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/create-your-own')}
+                className="px-4 py-3 rounded-pill fw-bold"
+              >
+                <FaPlusCircle className="me-2" />
+                Create New Travel Package
+              </Button>
+            </motion.div>
+            <p className="mt-3 text-muted">
+              or <a href="#" onClick={() => navigate('/browse_packages')} className="text-decoration-none">browse our pre-made packages</a>
+            </p>
+          </Card>
+        </motion.div>
+      </Container>
+    );
+  }
+
+  const summary = calculateSummary();
+  const dayData = tripData.itinerary[currentDayIndex];
 
   return (
-    <Container className="my-5">
+    <Container className="my-5 itinerary-container">
       <motion.h2
         className="text-center fw-bold mb-5"
         initial={{ y: -50, opacity: 0 }}
@@ -159,192 +227,232 @@ const ItineraryViewer = () => {
         ✈ Your Travel Adventure
       </motion.h2>
 
+      {/* Day Navigation Controls */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <motion.button
+          className="btn btn-outline-primary rounded-circle p-3"
+          onClick={goToPrevDay}
+          disabled={currentDayIndex === 0}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <FaArrowLeft size={20} />
+        </motion.button>
+
+        <div className="text-center">
+          <h3 className="mb-0">Day {currentDayIndex + 1} of {tripData.itinerary.length}</h3>
+          <small className="text-muted">{dayData?.date ?? ''}</small>
+        </div>
+
+        <motion.button
+          className="btn btn-outline-primary rounded-circle p-3"
+          onClick={goToNextDay}
+          disabled={currentDayIndex === tripData.itinerary.length - 1}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <FaArrowRight size={20} />
+        </motion.button>
+      </div>
+
+      {/* Day Status Toggle */}
+      <div className="text-center mb-4">
+        <motion.button
+          className={`btn ${dayData.status === 'Done' ? 'btn-success' : 'btn-outline-secondary'} rounded-circle p-4`}
+          onClick={toggleDayStatus}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          style={{ width: '100px', height: '100px' }}
+        >
+          <FaCheckCircle size={30} />
+          <div className="mt-2">{dayData.status}</div>
+        </motion.button>
+      </div>
+
       <AnimatePresence>
-        {itinerary.map((dayData, dayIndex) => (
-          <motion.div
-            key={dayIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, delay: dayIndex * 0.2 }}
-          >
-            <Card className="mb-4 shadow-lg border-0 rounded-4 itinerary-card">
-              <Card.Header className="bg-transparent p-0 rounded-top">
-                {dayData.locationImg && (
-                  <div className="image-container">
-                    <img
-                      src={dayData.locationImg}
-                      alt={dayData.location}
-                      className="img-fluid rounded-top"
-                      style={{ height: '400px', objectFit: 'cover', width: '100%' }}
-                    />
-                    <div className="image-overlay">
-                      <h3 className="text-white mb-0">Day {dayIndex + 1}</h3>
-                      <p className="text-white">{dayData?.location ?? ''}</p>
-                    </div>
+        <motion.div
+          key={currentDayIndex}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="mb-4 shadow-lg border-0 rounded-4 itinerary-card">
+            <Card.Header className="bg-transparent p-0 rounded-top">
+              {dayData.locationImg && (
+                <div className="image-container">
+                  <img
+                    src={dayData.locationImg}
+                    alt={dayData.location}
+                    className="img-fluid rounded-top"
+                    style={{ height: '400px', objectFit: 'cover', width: '100%' }}
+                  />
+                  <div className="image-overlay">
+                    <h3 className="text-white mb-0">Day {currentDayIndex + 1}</h3>
+                    <p className="text-white">{dayData?.location ?? ''}</p>
                   </div>
-                )}
-                <div className="p-3 bg-light d-flex justify-content-between align-items-center">
-                  <Badge bg="primary" className="rounded-pill">
-                    📅 {dayData?.date ?? ''}
-                  </Badge>
-                  <Badge bg="info" className="rounded-pill">
-                    🔢 Day {dayData?.day ?? dayIndex + 1}
-                  </Badge>
                 </div>
-              </Card.Header>
+              )}
+              <div className="p-3 bg-light d-flex justify-content-between align-items-center">
+                <Badge bg="primary" className="rounded-pill">
+                  <FaRegCalendarAlt className="me-1" /> {dayData?.date ?? ''}
+                </Badge>
+                <Badge bg="info" className="rounded-pill">
+                  <GiPathDistance className="me-1" /> Day {dayData?.day ?? currentDayIndex + 1}
+                </Badge>
+              </div>
+            </Card.Header>
 
-              <Card.Body className="p-4">
-                <Row className="mb-4">
-                  <Col md={6}>
-                    <h5 className="section-title">
-                      <FaHotel className="me-2" /> Accommodation
-                    </h5>
-                    {dayData.accommodationImg && (
-                      <motion.img
-                        src={dayData.accommodationImg}
-                        alt="Accommodation"
-                        className="img-fluid rounded-3 mb-3"
-                        style={{ height: '200px', objectFit: 'cover', width: '100%' }}
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    )}
-                    <Card className="border-0 bg-light shadow-sm p-3 rounded-3">
-                      <p className="mb-1 fw-bold">{dayData.accommodation?.name ?? ''}</p>
-                      <p className="mb-1 text-muted">
-                        {dayData.accommodation?.type ?? ''} | 💰 {dayData.accommodation?.estimatedCost ?? ''}{' '}
-                        {dayData.accommodation?.currency ?? ''}
-                      </p>
-                      <small className="text-muted">{dayData.accommodation?.notes ?? ''}</small>
-                    </Card>
-                  </Col>
-
-                  <Col md={6}>
-                    <h5 className="section-title">
-                      <FaPlane className="me-2" /> Transport
-                    </h5>
-                    {Array.isArray(dayData.transport) && dayData.transport.length > 0 ? (
-                      dayData.transport.map((t, i) => (
-                        <motion.div
-                          key={i}
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Card className="border-0 bg-light shadow-sm p-3 mb-2 rounded-3">
-                            <p className="mb-1 fw-bold">{t.mode ?? ''}</p>
-                            <p className="mb-1 text-muted">{t.details ?? ''}</p>
-                            <small className="text-muted">
-                              💸 {t.estimatedCost ?? ''} {t.currency ?? ''}
-                            </small>
-                          </Card>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <p className="text-muted">No transport details available.</p>
-                    )}
-                  </Col>
-                </Row>
-
-                <Row className="mb-4">
-                  <Col md={6}>
-                    <h5 className="section-title">
-                      <FaUtensils className="me-2" /> Meals
-                    </h5>
-                    {Array.isArray(dayData.meals) && dayData.meals.length > 0 ? (
-                      dayData.meals.map((meal, i) => (
-                        <motion.div
-                          key={i}
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Card className="border-0 bg-light shadow-sm p-3 mb-3 rounded-3">
-                            {meal.img && (
-                              <img
-                                src={meal.img}
-                                alt={meal.type}
-                                className="img-fluid rounded-3 mb-2"
-                                style={{ height: '150px', objectFit: 'cover', width: '100%' }}
-                              />
-                            )}
-                            <p className="mb-1 fw-bold">{meal.type ?? ''}</p>
-                            <p className="mb-1 text-muted">{meal.description ?? ''}</p>
-                            <small className="text-muted">
-                              💵 {meal.cost ?? ''} {meal.currency ?? ''} | {meal.notes ?? ''}
-                            </small>
-                          </Card>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <p className="text-muted">No meals planned for this day.</p>
-                    )}
-                  </Col>
-
-                  <Col md={6}>
-                    <h5 className="section-title">
-                      <FaMapSigns className="me-2" /> Activities
-                    </h5>
-                    {Array.isArray(dayData.activities) && dayData.activities.length > 0 ? (
-                      dayData.activities.map((act, i) => (
-                        <motion.div
-                          key={i}
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Card className="border-0 bg-light shadow-sm p-3 mb-3 rounded-3">
-                            {act.img && (
-                              <img
-                                src={act.img}
-                                alt={act.type}
-                                className="img-fluid rounded-3 mb-2"
-                                style={{ height: '150px', objectFit: 'cover', width: '100%' }}
-                              />
-                            )}
-                            <p className="mb-1 fw-bold">{act.type ?? ''}</p>
-                            <p className="mb-1 text-muted">{act.description ?? ''}</p>
-                            <small className="text-muted">
-                              ⏱ {act.duration ?? ''} | 📝 {act.notes ?? ''}
-                            </small>
-                            <motion.button
-                              className={`btn mt-2 ${
-                                act.status === 'Done' ? 'btn-success' : 'btn-outline-primary'
-                              }`}
-                              onClick={() => toggleActivityStatus(dayIndex, i)}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              {act.status === 'Done' ? (
-                                <>
-                                  <FaCheckCircle className="me-1" /> Completed
-                                </>
-                              ) : (
-                                'Mark as Done'
-                              )}
-                            </motion.button>
-                          </Card>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <p className="text-muted">No activities planned.</p>
-                    )}
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={6}>
-                    <h5 className="section-title">💰 Total Estimate</h5>
-                    <p className="fs-4 fw-bold text-primary">
-                      {dayData?.costEstimate ?? ''} {dayData.accommodation?.currency ?? ''}
+            <Card.Body className="p-4">
+              <Row className="mb-4">
+                <Col md={6}>
+                  <h5 className="section-title">
+                    <FaHotel className="me-2" /> Accommodation
+                  </h5>
+                  {dayData.accommodationImg && (
+                    <motion.img
+                      src={dayData.accommodationImg}
+                      alt="Accommodation"
+                      className="img-fluid rounded-3 mb-3"
+                      style={{ height: '200px', objectFit: 'cover', width: '100%' }}
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  )}
+                  <Card className="border-0 bg-light shadow-sm p-3 rounded-3">
+                    <p className="mb-1 fw-bold">{dayData.accommodation?.name ?? ''}</p>
+                    <p className="mb-1 text-muted">
+                      {dayData.accommodation?.type ?? ''} | 💰 {dayData.accommodation?.estimatedCost ?? ''}{' '}
+                      {dayData.accommodation?.currency ?? ''}
                     </p>
-                  </Col>
-                  <Col md={6}>
-                    <h5 className="section-title">📝 Notes</h5>
-                    <p className="text-muted">{dayData?.notes ?? 'No additional notes.'}</p>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </motion.div>
-        ))}
+                    <small className="text-muted">{dayData.accommodation?.notes ?? ''}</small>
+                  </Card>
+                </Col>
+
+                <Col md={6}>
+                  <h5 className="section-title">
+                    <FaPlane className="me-2" /> Transport
+                  </h5>
+                  {Array.isArray(dayData.transport) && dayData.transport.length > 0 ? (
+                    dayData.transport.map((t, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Card className="border-0 bg-light shadow-sm p-3 mb-2 rounded-3">
+                          <p className="mb-1 fw-bold">{t.mode ?? ''}</p>
+                          <p className="mb-1 text-muted">{t.details ?? ''}</p>
+                          <small className="text-muted">
+                            💸 {t.estimatedCost ?? ''} {t.currency ?? ''}
+                          </small>
+                        </Card>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="text-muted">No transport details available.</p>
+                  )}
+                </Col>
+              </Row>
+
+              <Row className="mb-4">
+                <Col md={6}>
+                  <h5 className="section-title">
+                    <FaUtensils className="me-2" /> Meals
+                  </h5>
+                  {Array.isArray(dayData.meals) && dayData.meals.length > 0 ? (
+                    dayData.meals.map((meal, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Card className="border-0 bg-light shadow-sm p-3 mb-3 rounded-3">
+                          {meal.img && (
+                            <img
+                              src={meal.img}
+                              alt={meal.type}
+                              className="img-fluid rounded-3 mb-2"
+                              style={{ height: '150px', objectFit: 'cover', width: '100%' }}
+                            />
+                          )}
+                          <p className="mb-1 fw-bold">{meal.type ?? ''}</p>
+                          <p className="mb-1 text-muted">{meal.description ?? ''}</p>
+                          <small className="text-muted">
+                            💵 {meal.cost ?? ''} {meal.currency ?? ''} | {meal.notes ?? ''}
+                          </small>
+                        </Card>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="text-muted">No meals planned for this day.</p>
+                  )}
+                </Col>
+
+                <Col md={6}>
+                  <h5 className="section-title">
+                    <FaMapSigns className="me-2" /> Activities
+                  </h5>
+                  {Array.isArray(dayData.activities) && dayData.activities.length > 0 ? (
+                    dayData.activities.map((act, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Card className="border-0 bg-light shadow-sm p-3 mb-3 rounded-3">
+                          {act.img && (
+                            <img
+                              src={act.img}
+                              alt={act.type}
+                              className="img-fluid rounded-3 mb-2"
+                              style={{ height: '150px', objectFit: 'cover', width: '100%' }}
+                            />
+                          )}
+                          <p className="mb-1 fw-bold">{act.type ?? ''}</p>
+                          <p className="mb-1 text-muted">{act.description ?? ''}</p>
+                          <small className="text-muted">
+                            ⏱ {act.duration ?? ''} | 📝 {act.notes ?? ''}
+                          </small>
+                          <motion.button
+                            className={`btn mt-2 ${
+                              act.status === 'Done' ? 'btn-success' : 'btn-outline-primary'
+                            }`}
+                            onClick={() => toggleActivityStatus(currentDayIndex, i)}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {act.status === 'Done' ? (
+                              <>
+                                <FaCheckCircle className="me-1" /> Completed
+                              </>
+                            ) : (
+                              'Mark as Done'
+                            )}
+                          </motion.button>
+                        </Card>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="text-muted">No activities planned.</p>
+                  )}
+                </Col>
+              </Row>
+
+              <Row>
+                <Col md={6}>
+                  <h5 className="section-title">💰 Total Estimate</h5>
+                  <p className="fs-4 fw-bold text-primary">
+                    {dayData?.costEstimate ?? ''} {dayData.accommodation?.currency ?? ''}
+                  </p>
+                </Col>
+                <Col md={6}>
+                  <h5 className="section-title">📝 Notes</h5>
+                  <p className="text-muted">{dayData?.notes ?? 'No additional notes.'}</p>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </motion.div>
       </AnimatePresence>
 
       {/* Itinerary Summary */}
@@ -378,7 +486,7 @@ const ItineraryViewer = () => {
                   <div>
                     <h5 className="mb-1">Total Estimated Cost</h5>
                     <p className="text-muted">
-                      {summary.totalCost} {itinerary[0]?.accommodation?.currency ?? ''}
+                      {summary.totalCost} {tripData.itinerary[0]?.accommodation?.currency ?? ''}
                     </p>
                   </div>
                 </div>

@@ -1,25 +1,65 @@
-/* App.css */
+/* Base Styles */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-body, html, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.router {
-  min-height: 100%;
-  /* background: url('/images/travel-bg.jpg') no-repeat center center fixed; */
-  background-size: cover;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 60px; /* Space for fixed footer */
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #f1f1f1);
 }
 
-main {
-  flex: 1;
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #888);
+  border-radius: 10px;
 }
 
-*{
-  box-sizing: border-box;
-  font-family: 'Roboto';
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #555);
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem 0;
+  }
+  
+  .theme-toggle-btn {
+    bottom: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
 }

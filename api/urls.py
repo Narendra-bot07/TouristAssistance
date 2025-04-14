@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user, login_user, get_user_by_email,create_package,get_latest_itinerary,get_recent_packages,get_user_profile,update_user,change_password,get_package_details_by_id
+from .views import register_user, login_user, get_user_by_email,create_package,get_latest_itinerary,get_recent_packages,get_user_profile,update_user,change_password,get_package_details_by_id,check_active_trips,get_trip_stats
 
 urlpatterns = [
     path('register/', register_user),
@@ -12,4 +12,6 @@ urlpatterns = [
     path('update_user/<str:username>/', update_user, name='update_user'),
     path('change-password/<str:username>/', change_password, name='change_password'),
     path('package/<str:username>/<str:package_id>/',get_package_details_by_id, name='get_package_details'),
+    path('check-active-trips/<str:username>/', check_active_trips, name='check_active_trips'),
+    path('trip-stats/<str:username>/', get_trip_stats, name='get_trip_stats'),
 ]

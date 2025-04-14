@@ -20,12 +20,19 @@ const CreateYourOwnPackage = () => {
     diet: '',
     budget: ''
   });
-  const responseStates = { initial: "INITIAL", loading: "LOADING", success: "SUCCESS", failure: "FAILURE" };
+
+  const responseStates = { 
+    initial: "INITIAL", 
+    loading: "LOADING", 
+    success: "SUCCESS", 
+    failure: "FAILURE" 
+  };
+  
   const [responseState, setResponseState] = useState(responseStates.initial);
   const [error, setError] = useState('');
 
-  // Format date to 'DD-MM-YYYY'
   const formatDate = (dateStr) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -33,13 +40,11 @@ const CreateYourOwnPackage = () => {
     return `${day}-${month}-${year}`;
   };
 
-  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle checkbox changes
   const handleCheckboxChange = (e) => {
     const { value, checked, name } = e.target;
     setFormData(prev => {
@@ -50,7 +55,6 @@ const CreateYourOwnPackage = () => {
     });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -140,7 +144,6 @@ const CreateYourOwnPackage = () => {
 
           <Form onSubmit={handleSubmit}>
             <Row>
-              {/* Start Place */}
               <Col md={6} className="mb-4">
                 <Form.Group>
                   <Form.Label className="d-flex align-items-center">
@@ -160,7 +163,6 @@ const CreateYourOwnPackage = () => {
                 </Form.Group>
               </Col>
 
-              {/* Destination Place */}
               <Col md={6} className="mb-4">
                 <Form.Group>
                   <Form.Label className="d-flex align-items-center">
@@ -182,7 +184,6 @@ const CreateYourOwnPackage = () => {
             </Row>
 
             <Row>
-              {/* Start Date */}
               <Col md={6} className="mb-4">
                 <Form.Group>
                   <Form.Label className="d-flex align-items-center">
@@ -201,7 +202,6 @@ const CreateYourOwnPackage = () => {
                 </Form.Group>
               </Col>
 
-              {/* End Date */}
               <Col md={6} className="mb-4">
                 <Form.Group>
                   <Form.Label className="d-flex align-items-center">
@@ -222,7 +222,6 @@ const CreateYourOwnPackage = () => {
             </Row>
 
             <Row>
-              {/* Number of People */}
               <Col md={6} className="mb-4">
                 <Form.Group>
                   <Form.Label className="d-flex align-items-center">
@@ -243,7 +242,6 @@ const CreateYourOwnPackage = () => {
                 </Form.Group>
               </Col>
 
-              {/* Budget */}
               <Col md={6} className="mb-4">
                 <Form.Group>
                   <Form.Label className="d-flex align-items-center">
@@ -264,7 +262,6 @@ const CreateYourOwnPackage = () => {
               </Col>
             </Row>
 
-            {/* Dietary Restrictions */}
             <Row>
               <Col md={12} className="mb-4">
                 <Form.Group>
@@ -285,7 +282,6 @@ const CreateYourOwnPackage = () => {
               </Col>
             </Row>
 
-            {/* Activity Preferences */}
             <Form.Group className="mb-4">
               <Form.Label className="d-flex align-items-center">
                 <FaMapSigns className="me-2" /> Activity Preferences
@@ -313,7 +309,6 @@ const CreateYourOwnPackage = () => {
               </Row>
             </Form.Group>
 
-            {/* Travel Goals */}
             <Form.Group className="mb-4">
               <Form.Label className="d-flex align-items-center">
                 <FaGlobe className="me-2" /> Travel Goals
@@ -341,7 +336,6 @@ const CreateYourOwnPackage = () => {
               </Row>
             </Form.Group>
 
-            {/* Submit Button */}
             <motion.div
               className="build-package-btn-container"
               whileHover={{ scale: 1.05 }}
@@ -352,7 +346,11 @@ const CreateYourOwnPackage = () => {
                 className={responseState === responseStates.loading ? "travel-loading-btn" : "build-package-btn"}
                 disabled={responseState === responseStates.loading}
               >
-                {responseState === responseStates.loading ? "" : "Build Your Package"}
+                {responseState === responseStates.loading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : (
+                  "Build Your Package"
+                )}
               </Button>
             </motion.div>
           </Form>

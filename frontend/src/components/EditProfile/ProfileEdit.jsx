@@ -127,7 +127,7 @@ const ProfileEdit = () => {
 
             <div className="avatar-container text-center mb-4">
               <img
-                src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
+                src="https://cdna.artstation.com/p/assets/images/images/050/664/730/large/default-egg-bag2.jpg?1655383353"
                 alt="Profile Avatar"
                 className="avatar-image rounded-circle"
               />
