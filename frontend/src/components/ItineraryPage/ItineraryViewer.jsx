@@ -64,11 +64,9 @@ const ItineraryViewer = () => {
           {itinerary.map((dayData, index) => (
             <Carousel.Item key={index}>
               <Card className="mb-3">
-                
-                {/* Updated Card Header */}
                 <Card.Header>
                   <div className="d-flex justify-content-between align-items-center">
-                    <h4 className="mb-0">Day {dayData.day} - {dayData.date}</h4>
+                    <h4 className="mb-0">Day {dayData.day ?? 'N/A'} - {dayData.date ?? 'N/A'}</h4>
                     <div>
                       <Button
                         variant="light"
@@ -91,15 +89,15 @@ const ItineraryViewer = () => {
                 </Card.Header>
 
                 <Card.Body>
-                  <h5>Location: {dayData.location}</h5>
+                  <h5>Location: {dayData.location ?? 'N/A'}</h5>
 
                   <h6>Activities:</h6>
                   <ul>
-                    {dayData.activities.map((activity, index) => (
+                    {(dayData.activities ?? []).map((activity, index) => (
                       <li key={index}>
-                        <strong>{activity.type}:</strong> {activity.description} <br />
-                        <small><i>Duration: {activity.duration}</i></small>
-                        <p>{activity.notes}</p>
+                        <strong>{activity.type ?? 'N/A'}:</strong> {activity.description ?? 'N/A'} <br />
+                        <small><i>Duration: {activity.duration ?? 'N/A'}</i></small>
+                        <p>{activity.notes ?? 'N/A'}</p>
 
                         <Button
                           variant={activity.status === 'Done' ? 'success' : 'secondary'}
@@ -114,35 +112,35 @@ const ItineraryViewer = () => {
 
                   <h6>Transport:</h6>
                   <ul>
-                    {dayData.transport.map((transport, index) => (
+                    {(dayData.transport ?? []).map((transport, index) => (
                       <li key={index}>
-                        <strong>{transport.mode}:</strong> {transport.details} <br />
-                        <small><i>Estimated Cost: {transport.estimatedCost} {transport.currency}</i></small>
+                        <strong>{transport.mode ?? 'N/A'}:</strong> {transport.details ?? 'N/A'} <br />
+                        <small><i>Estimated Cost: {transport.estimatedCost ?? 'N/A'} {transport.currency ?? ''}</i></small>
                       </li>
                     ))}
                   </ul>
 
                   <h6>Accommodation:</h6>
-                  <p><strong>{dayData.accommodation.name}</strong> ({dayData.accommodation.type})</p>
-                  <p>Estimated Cost: {dayData.accommodation.estimatedCost} {dayData.accommodation.currency}</p>
-                  <p>{dayData.accommodation.notes}</p>
+                  <p><strong>{dayData.accommodation?.name ?? 'N/A'}</strong> ({dayData.accommodation?.type ?? 'N/A'})</p>
+                  <p>Estimated Cost: {dayData.accommodation?.estimatedCost ?? 'N/A'} {dayData.accommodation?.currency ?? ''}</p>
+                  <p>{dayData.accommodation?.notes ?? 'N/A'}</p>
 
                   <h6>Meals:</h6>
                   <ul>
-                    {dayData.meals.map((meal, index) => (
+                    {(dayData.meals ?? []).map((meal, index) => (
                       <li key={index}>
-                        <strong>{meal.type}:</strong> {meal.description} <br />
-                        <small><i>Cost: {meal.cost} {meal.currency}</i></small>
-                        <p>{meal.notes}</p>
+                        <strong>{meal.type ?? 'N/A'}:</strong> {meal.description ?? 'N/A'} <br />
+                        <small><i>Cost: {meal.cost ?? 'N/A'} {meal.currency ?? ''}</i></small>
+                        <p>{meal.notes ?? 'N/A'}</p>
                       </li>
                     ))}
                   </ul>
 
                   <h6>Cost Estimate:</h6>
-                  <p><strong>{dayData.costEstimate} {dayData.accommodation.currency}</strong></p>
+                  <p><strong>{dayData.costEstimate ?? 'N/A'} {dayData.accommodation?.currency ?? ''}</strong></p>
 
                   <h6>Notes:</h6>
-                  <p>{dayData.notes}</p>
+                  <p>{dayData.notes ?? 'N/A'}</p>
                 </Card.Body>
               </Card>
             </Carousel.Item>
