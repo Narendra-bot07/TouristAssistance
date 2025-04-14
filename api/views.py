@@ -28,6 +28,7 @@ auth = firebase.auth()
 GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s"  # Removed trailing dot
 GOOGLE_MAPS_API_KEY = "AIzaSyBf7g228DZPB46GCpKufTBV_QpinWBCJp4"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
+EMAILABLE_API_KEY = "live_27d441d3b1cbd28b0e78"
 
 gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
 genai.configure(api_key=GEMINI_API_KEY)
@@ -111,6 +112,16 @@ def register_user(request):
                         "status": "error",
                         "message": "Username already taken"
                     }, status=status.HTTP_400_BAD_REQUEST)
+                
+        try:
+            response = requests.get(f"https://api.emailable.com/v1/verify?email={email}&api_key={EMAILABLE_API_KEY}")
+            response.raise_for_status()
+            result = response.json()
+            if result.get("state") != "deliverable":
+                print("Email is Invalid")
+                return JsonResponse({"status": "error", "message": "Invalid Email"}, status=400)
+        except requests.RequestException as e:
+            return JsonResponse({"status": "error", "message": "Invalid Email"}, status=400)
 
         # ✅ Save new user with age
         result = db.child("users").push({
