@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { NavLink } from 'react-router-dom';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import "./Profile.css"
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -15,6 +18,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showProfilePic,setShowProfilePic] = useState(false);
 
   const defaultPic = "https://cdna.artstation.com/p/assets/images/images/050/664/730/large/default-egg-bag2.jpg?1655383353";
 
@@ -45,6 +49,8 @@ const Profile = () => {
   }, []);
 
   const getSafe = (val, fallback) => val || fallback;
+  const openProfile = () => setShowProfilePic(true);
+  const handleClose = () => setShowProfilePic(false);
 
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
@@ -74,29 +80,28 @@ const Profile = () => {
         }}>
           <div className="row align-items-center">
             <div className="col-md-4 text-center mb-4 mb-md-0">
-              <div className="position-relative d-inline-block">
-                <img
-                  src={defaultPic}
+              <div className="position-relative d-inline-block profile-container">
+                <button className="btn btn-sm btn-light rounded-pill position-absolute profile-pic shadow-sm" 
+                  style={{ transform: 'translate(-10px, -10px)' }} onClick={openProfile}>
+                  <img
+                  src={getSafe(profile?.profilePic,defaultPic)} 
                   alt="Profile"
-                  className="rounded-circle shadow"
+                  className="rounded-circle"
                   style={{ 
-                    width: '160px', 
-                    height: '160px', 
+                    width: '120px', 
+                    height: '120px', 
                     objectFit: 'cover', 
                     border: '5px solid rgba(255,255,255,0.3)',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                   }}
                 />
-                <button className="btn btn-sm btn-light rounded-pill position-absolute bottom-0 end-0 shadow-sm" 
-                  style={{ transform: 'translate(-10px, -10px)' }}>
-                  <i className="bi bi-camera-fill"></i>
                 </button>
               </div>
             </div>
 
             <div className="col-md-8">
-              <h2 className="fw-bold text-white mb-1">{getSafe(profile?.name, "Your Name")}</h2>
-              <p className="text-light fs-5 mb-2">
+              <h2 className="fw-bold mb-1" style={{color: "#2c5364 !important;"}}>{getSafe(profile?.name, "Your Name")}</h2>
+              <p className="fs-5 mb-2" style={{color: "#2c5364 !important;"}}>
                 <i className="bi bi-geo-alt-fill me-2"></i>
                 {getSafe(profile?.profession, "Travel Enthusiast")}
               </p>
@@ -118,7 +123,7 @@ const Profile = () => {
                 <NavLink to="/edit-profile" className="btn btn-light rounded-pill px-4 shadow-sm">
                   <i className="bi bi-pencil-square me-2"></i> Edit Profile
                 </NavLink>
-                <NavLink to="/change-password" className="btn btn-outline-light rounded-pill px-4 shadow-sm">
+                <NavLink to="/change-password" className="btn btn-outline-dark rounded-pill px-4 shadow-sm">
                   <i className="bi bi-shield-lock me-2"></i> Change Password
                 </NavLink>
               </div>
@@ -292,6 +297,29 @@ const Profile = () => {
           </div>
         </div>
       )}
+      <Modal show={showProfilePic} onHide={handleClose} className='Modal'>
+        <Modal.Header closeButton>
+        </Modal.Header>
+        <Modal.Body>
+          <img
+            src={getSafe(profile?.profilePic,defaultPic)}
+            alt="Profile"
+            className="w-100"
+            style={{ 
+              width: '300px', 
+              height: '300px', 
+              objectFit: 'cover', 
+              border: '5px solid rgba(255,255,255,0.3)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            }}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

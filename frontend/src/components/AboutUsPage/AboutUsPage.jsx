@@ -85,7 +85,7 @@ const AboutUsPage = () => {
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: '800px', mx: 'auto' }}>
             Founded with a love for exploration, we’re a travel agency dedicated to turning your dreams into reality. 
-            With Grok 3’s innovative technology, our team designs personalized itineraries that capture the essence of 
+            With innovative technology, our team designs personalized itineraries that capture the essence of 
             every destination, ensuring every moment is unforgettable.
           </Typography>
         </motion.div>
@@ -214,7 +214,7 @@ const AboutUsPage = () => {
             Ready to Explore?
           </Typography>
           <Typography variant="body1" color="text.secondary" className="mb-4">
-            Contact us to start planning your next adventure with Grok 3.
+            Contact us to start planning your next adventure.
           </Typography>
           <Link to="/create-your-own">
             <Button
