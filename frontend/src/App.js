@@ -16,6 +16,7 @@ import RecentTrips from './components/RecentTripsComponents/RecentTrips';
 import ProfileEdit from './components/EditProfile/ProfileEdit';
 import ChangePassword from './components/ChangePassword/ChangePassword';
 import TripDetails from './components/GetParticularItinerary/TripDetails';
+import ChatBotIcon from './components/ChatBotIcon/ChatBotIcon';
 function App() {
   return (
     <div className='router'>
@@ -40,6 +41,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
+        <ChatBotIcon />
       </Router>
     </div>
   );
