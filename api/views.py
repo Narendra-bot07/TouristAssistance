@@ -911,9 +911,9 @@ def get_trip_stats(request, username):
             package_details = package.get("input", {})
             try:
                 # Parse dates (using the format we established earlier)
-                start_date = datetime.strptime(package_details.get("startDate"), "%d-%m-%y").date()
-                end_date = datetime.strptime(package_details.get("endDate"), "%d-%m-%y").date()
-                
+                start_date = datetime.strptime(package_details.get("startDate"), "%d-%m-%Y").date()
+                end_date = datetime.strptime(package_details.get("endDate"), "%d-%m-%Y").date()
+                  
                 if start_date > today:
                     upcoming_trips += 1
                 elif end_date < today:
