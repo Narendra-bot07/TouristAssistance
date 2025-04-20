@@ -245,7 +245,8 @@ const ProfileEdit = () => {
                 <Link to="/profile">
                   <Button
                     variant="outline-secondary"
-                    className="back-btn rounded-3"
+                    className="btn back-btn btn-primary rounded-3"
+                    style={{color: "white",fontWeight: "bold"}}
                   >
                     <FaArrowLeft className="me-2" color="white"/> Back
                   </Button>
@@ -253,7 +254,7 @@ const ProfileEdit = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  className="save-btn rounded-3"
+                  className="btn save-btn btn-primary rounded-3"
                   disabled={loading}
                 >
                   <FaSave className="me-2" color="white"/> Save Changes
