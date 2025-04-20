@@ -9,7 +9,12 @@ import google.generativeai as genai
 import requests
 import json
 import re
+import spacy
+from agno.agent import Agent
+from agno.models.groq import Groq
 from dateutil.relativedelta import relativedelta
+from django.views.decorators.csrf import csrf_exempt
+import os
 firebaseConfig = {
     "apiKey": "AIzaSyBvF4sctKkdQFSkkvvDyLKENJMFlaWCWQU",
     "authDomain": "coe-project-24d1c.firebaseapp.com",
@@ -25,7 +30,7 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
 auth = firebase.auth()
 
-GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s"  # Removed trailing dot
+GEMINI_API_KEY = "AIzaSyAYhGvML3XNS2k3O47wyqTx7FBf6Kjut1s"  
 GOOGLE_MAPS_API_KEY = "AIzaSyBf7g228DZPB46GCpKufTBV_QpinWBCJp4"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
 EMAILABLE_API_KEY = "live_27d441d3b1cbd28b0e78"
@@ -50,9 +55,8 @@ def register_user(request):
         phone = data.get('phonenumber')
         password = data.get('password')
         confirm_password = data.get('confirmPassword')
-        dob_str = data.get('dob')  # Get DOB as string
-
-        # ✅ Debug Field Values
+        dob_str = data.get('dob')  
+       
         print("[DEBUG] username:", username)
         print("[DEBUG] name:", name)
         print("[DEBUG] email:", email)
@@ -61,12 +65,12 @@ def register_user(request):
         print("[DEBUG] confirm_password:", confirm_password)
         print("[DEBUG] dob:", dob_str)
 
-        # ✅ Check all fields are present and not empty
+      
         required_fields = [username, name, email, phone, password, confirm_password, dob_str]
         if any(field is None or str(field).strip() == '' for field in required_fields):
             return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Validate date format and calculate age
+      
         try:
             dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
             today = date.today()
@@ -915,7 +919,6 @@ def get_trip_stats(request, username):
                 elif end_date < today:
                     completed_trips += 1
             except:
-                # Skip packages with invalid dates
                 continue
 
         return JsonResponse({
@@ -933,3 +936,123 @@ def get_trip_stats(request, username):
             "status": "error",
             "message": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# Load spaCy's English model
+nlp = spacy.load("en_core_web_sm")
+
+# Set API keys
+os.environ["GROQ_API_KEY"] = "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"
+WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
+
+# Initialize Agent
+agent = Agent(
+    name="Travel Information Assistant",
+    model=Groq(id="gemma2-9b-it"),
+    instructions=""" 
+        You are a travel information specialist. Only respond to queries about:
+        - Places (cities, countries, landmarks)
+        - Weather conditions
+        - Historical information about locations
+        
+        For approved queries, provide:
+        1. For weather: current conditions with metrics
+        2. For history: key facts in bullet points
+        3. For place names: both weather and history
+        
+        Format responses in clear markdown with emojis.
+    """,
+    markdown=True
+)
+
+def is_travel_query(query: str) -> bool:
+    doc = nlp(query.lower())
+    location_entities = any(ent.label_ == "GPE" for ent in doc.ents)
+    keywords = {'weather', 'temperature', 'forecast', 'history', 'about', 'place', 'visit'}
+    contains_keywords = any(token.text in keywords for token in doc)
+    return location_entities or contains_keywords
+
+def analyze_query(query: str):
+    """Analyze the query to check if it relates to travel and extract the location"""
+    doc = nlp(query)
+    locations = [ent.text for ent in doc.ents if ent.label_ == "GPE"]
+    location = locations[-1] if locations else query.split()[-1]
+
+    return {
+        'valid': is_travel_query(query),
+        'location': location,
+        'is_weather': any(token.text in {'weather', 'temperature', 'forecast'} for token in doc),
+        'is_history': any(token.text in {'history', 'about'} for token in doc)
+    }
+
+def get_weather(location: str) -> str:
+    """Fetch current weather data"""
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={WEATHER_API_KEY}&units=metric"
+    try:
+        res = requests.get(url, timeout=5)
+        data = res.json()
+        if res.status_code == 200:
+            return (
+                f"## 🌦️ Current Weather in {data['name']}\n"
+                f"- 🌡️ Temp: {data['main']['temp']}°C (Feels like {data['main']['feels_like']}°C)\n"
+                f"- ☁️ Conditions: {data['weather'][0]['description'].title()}\n"
+                f"- 💧 Humidity: {data['main']['humidity']}%\n"
+                f"- 🌬️ Wind: {data['wind']['speed']} m/s\n"
+                f"- 🕒 Updated: {datetime.fromtimestamp(data['dt']).strftime('%Y-%m-%d %H:%M')}\n"
+            )
+        return f"⚠️ Couldn't get weather for {location}"
+    except Exception as e:
+        return f"⚠️ Weather service error: {str(e)}"
+
+def get_history(location: str) -> str:
+    """Fetch historical data from the agent"""
+    response = ""
+    def callback(chunk): 
+        nonlocal response
+        response += chunk
+
+    prompt = (
+        f"Provide a detailed history of {location} including:\n"
+        "- Brief intro\n"
+        "- Key historical facts\n"
+        "- Cultural & modern relevance\n"
+        "Use markdown with emojis."
+    )
+    agent.print_response(prompt, callback=callback, stream=True)
+    
+    print(f"History Response: {response}")
+
+    return f"## 📜 History of {location}\n" + response
+
+@csrf_exempt
+def chatbot_view(request):
+    """Django view to handle the chatbot requests"""
+    if request.method == "POST":
+        body = json.loads(request.body)
+        query = body.get("message", "")
+        if not query:
+            return JsonResponse({"reply": "❗Please enter a valid query."})
+
+        analysis = analyze_query(query)
+        if not analysis['valid']:
+            return JsonResponse({
+                "reply": (
+                    "🚫 I can only help with travel questions.\n"
+                    "Try asking:\n"
+                    "- 'Weather in Tokyo'\n"
+                    "- 'History of Rome'\n"
+                    "- 'Tell me about Paris'"
+                )
+            })
+
+        location = analysis["location"]
+        reply = ""
+
+        if analysis["is_weather"] and not analysis["is_history"]:
+            reply = get_weather(location)
+        elif analysis["is_history"] and not analysis["is_weather"]:
+            reply = get_history(location)
+        else:
+            reply = get_weather(location) + "\n\n" + get_history(location)
+
+        return JsonResponse({"reply": reply})
+    
+    return JsonResponse({"error": "Only POST method allowed."})

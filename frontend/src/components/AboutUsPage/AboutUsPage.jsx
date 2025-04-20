@@ -85,8 +85,6 @@ const AboutUsPage = () => {
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: '800px', mx: 'auto' }}>
             Founded with a love for exploration, we’re a travel agency dedicated to turning your dreams into reality. 
-            With innovative technology, our team designs personalized itineraries that capture the essence of 
-            every destination, ensuring every moment is unforgettable.
           </Typography>
         </motion.div>
       </Container>
