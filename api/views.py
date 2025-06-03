@@ -16,16 +16,15 @@ from dateutil.relativedelta import relativedelta
 from django.views.decorators.csrf import csrf_exempt
 import os
 firebaseConfig = {
-  "apiKey": "AIzaSyBD84YNMco3A-GoW6ybNUsED5kfQMsGlKc",
-  "authDomain": "coeproject-bf469.firebaseapp.com",
-  "databaseURL": "https://coeproject-bf469-default-rtdb.firebaseio.com",
-  "projectId": "coeproject-bf469",
-  "storageBucket": "coeproject-bf469.appspot.com",
-  "messagingSenderId": "120245958650",
-  "appId": "1:120245958650:web:c38024fa8f2783e55fd643",
-  "measurementId": "G-TZK00Q5R73"
+    "apiKey": "AIzaSyBvF4sctKkdQFSkkvvDyLKENJMFlaWCWQU",
+    "authDomain": "coe-project-24d1c.firebaseapp.com",
+    "databaseURL": "https://coe-project-24d1c-default-rtdb.firebaseio.com",
+    "projectId": "coe-project-24d1c",
+    "storageBucket": "coe-project-24d1c.appspot.com",
+    "messagingSenderId": "244172124947",
+    "appId": "1:244172124947:web:7b21248ef1d4b1d5f060e6",
+    "measurementId": "G-KGC9E9TWWH"
 }
-
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
