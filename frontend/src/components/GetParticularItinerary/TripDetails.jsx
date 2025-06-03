@@ -40,7 +40,6 @@ const TripDetails = () => {
         if (response.data.status === 'success') {
           const packageDetails = response.data.package;
 
-          // Enhance itinerary data with Unsplash images for locations, accommodations, meals, and activities
           const enhancedItinerary = await Promise.all(
             packageDetails.itinerary.map(async (day) => {
               const locationImage = await fetchUnsplashImage(day.location);

@@ -59,9 +59,7 @@ export default function LoginPage() {
           className="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white left-panel"
         >
           <h1 className="display-4 fw-bold mb-3">Welcome Back!</h1>
-          <p className="lead text-center px-5">
-            Log in to plan your next adventure with ease and excitement.
-          </p>
+          
         </motion.div>
 
         {/* Right Panel */}

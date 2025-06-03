@@ -30,7 +30,7 @@ const AboutUsPage = () => {
   const values = [
     { icon: <FaStar />, title: 'Excellence', description: 'We strive for top-quality experiences in every trip.' },
     { icon: <FaUsers />, title: 'Personalization', description: 'Every journey is tailored to your unique preferences.' },
-    { icon: <FaRocket />, title: 'Innovation', description: 'Powered by Grok 3 for cutting-edge travel planning.' },
+    { icon: <FaRocket />, title: 'Innovation', description: 'Powered by gemini for cutting-edge travel planning.' },
   ];
 
   return (
@@ -167,37 +167,7 @@ const AboutUsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          <Typography variant="h3" component="h2" className="fw-bold mb-3 text-center">
-            Meet Our Team
-          </Typography>
-          <Grid container spacing={3}>
-            {teamMembers.map((member, index) => (
-              <Grid item xs={12} sm={6} md={4} key={member.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.2 }}
-                >
-                  <Card className="team-card shadow-lg border-0 rounded-4 h-100">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="team-image rounded-top"
-                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                    />
-                    <CardContent className="text-center">
-                      <Typography variant="h6" component="h3" className="fw-bold">
-                        {member.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {member.role}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
+          
         </motion.div>
       </Container>
 

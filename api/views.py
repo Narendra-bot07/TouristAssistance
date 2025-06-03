@@ -939,7 +939,6 @@ def get_trip_stats(request, username):
 # Load spaCy's English model
 nlp = spacy.load("en_core_web_sm")
 
-# Set API keys
 os.environ["GROQ_API_KEY"] = "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"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
 
@@ -991,7 +990,7 @@ def get_weather(location: str) -> str:
         data = res.json()
         if res.status_code == 200:
             return (
-                f"## 🌦️ Current Weather in {data['name']}\n"
+                f"🌦️ Current Weather in {data['name']}\n"
                 f"- 🌡️ Temp: {data['main']['temp']}°C (Feels like {data['main']['feels_like']}°C)\n"
                 f"- ☁️ Conditions: {data['weather'][0]['description'].title()}\n"
                 f"- 💧 Humidity: {data['main']['humidity']}%\n"

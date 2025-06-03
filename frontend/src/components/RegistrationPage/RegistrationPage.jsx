@@ -100,10 +100,8 @@ export default function RegisterPage() {
           transition={{ duration: 0.8 }}
           className="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white left-panel"
         >
-          <h1 className="display-4 fw-bold mb-3">Join the Journey</h1>
-          <p className="lead text-center px-5">
-            Create an account to start planning your dream adventures.
-          </p>
+          <h1 className="display-4 fw-bold mb-3">Start The Scripts</h1>
+         
         </motion.div>
 
         {/* Right Panel */}
