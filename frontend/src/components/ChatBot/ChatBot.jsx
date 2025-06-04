@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './ChatBot.css'; // You can keep this for any additional custom styling
-
+import './ChatBot.css'; 
 const ChatBot = () => {
   const [messages, setMessages] = useState([
     { from: 'bot', text: "Hello! I'm your travel assistant. Ask me about places or weather!" }
@@ -31,7 +30,7 @@ const ChatBot = () => {
 
   return (
     <div className="d-flex flex-column h-100">
-      {/* Messages container with scroll */}
+     
       <div className="flex-grow-1 overflow-auto p-3" style={{ maxHeight: '400px' }}>
         {messages.map((msg, index) => (
           <div 
@@ -49,7 +48,7 @@ const ChatBot = () => {
         )}
       </div>
 
-      {/* Input area */}
+      
       <div className="input-group p-3 border-top">
         <input
           type="text"

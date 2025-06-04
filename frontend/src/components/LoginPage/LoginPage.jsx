@@ -51,7 +51,6 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="row h-100">
-        {/* Left Panel */}
         <motion.div
           initial={{ opacity: 0, x: -100 }}
           animate={{ opacity: 1, x: 0 }}
@@ -62,7 +61,6 @@ export default function LoginPage() {
           
         </motion.div>
 
-        {/* Right Panel */}
         <div className="col-md-6 d-flex align-items-center">
           <motion.div
             initial={{ opacity: 0, x: 100 }}

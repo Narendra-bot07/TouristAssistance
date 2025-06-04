@@ -76,7 +76,6 @@ def register_user(request):
             today = date.today()
             age = relativedelta(today, dob).years
             
-            # Validate minimum age (example: 13 years)
             if age < 13:
                 return JsonResponse({
                     "status": "error",
@@ -89,14 +88,12 @@ def register_user(request):
                 "message": "Invalid date format. Use YYYY-MM-DD"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Password match check
         if password.strip() != confirm_password.strip():
             return JsonResponse({
                 "status": "error",
                 "message": "Passwords do not match"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Check if user exists
         users = db.child("users").get()
         if users.val() is not None:
             for user in users.each():
@@ -127,15 +124,14 @@ def register_user(request):
         except requests.RequestException as e:
             return JsonResponse({"status": "error", "message": "Invalid Email"}, status=400)
 
-        # ✅ Save new user with age
         result = db.child("users").push({
             "username": username,
             "name": name,
             "email": email,
             "phone": phone,
-            "password": password,  # ❗ Remember to hash in production!
+            "password": password,
             "dob": dob_str,
-            "age": age,  # Store calculated age
+            "age": age, 
             "created_at": datetime.now().isoformat(),
             "last_updated": datetime.now().isoformat()
         })
@@ -173,7 +169,6 @@ def login_user(request):
             if not identifier or not password:
                 return JsonResponse({"status": "error", "message": "Identifier and password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # ✅ Fetch all users
             users = db.child("users").get()
             if users.val() is None:
                 return JsonResponse({"status": "error", "message": "No users found in the database"}, status=status.HTTP_404_NOT_FOUND)
@@ -223,7 +218,7 @@ def get_user_by_email(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-from uuid import uuid4  # 🆕 ADDED for unique ID generation
+from uuid import uuid4  
 from datetime import datetime
 import json
 import re
@@ -252,7 +247,6 @@ def create_package(request):
                 "message": "Username and package details are required"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 🔄 Fix Date Format & Compute Duration
         def fix_year(year): 
             return '20' + year if len(year) == 2 else year
             
@@ -270,7 +264,6 @@ def create_package(request):
                 "message": f"Invalid date format: {str(e)}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 🌍 Prompt to Gemini
         prompt = f"""
 Create a detailed travel itinerary in JSON format with the following user-provided details:
 
@@ -297,7 +290,6 @@ Instructions:
 """
         print("[DEBUG] Sent prompt to Gemini:", prompt)
 
-        # Generate response
         gemini_response = model.generate_content(prompt)
         response_text = gemini_response.text
         print("[DEBUG] Gemini raw response:", response_text)
@@ -324,11 +316,9 @@ Instructions:
                     "raw_response": response_text
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # 🆕 Generate Unique Package ID
         package_id = str(uuid4())
         print(f"[DEBUG] Generated Package ID: {package_id}")
 
-        # 🔥 Save to Firebase
         users = db.child("users").get()
         if users.val() is None:
             return JsonResponse({"status": "error", "message": "No users found in database"}, status=status.HTTP_404_NOT_FOUND)
@@ -365,14 +355,12 @@ Instructions:
 @api_view(['GET'])
 def get_latest_itinerary(request, username):
     try:
-        # Validate input
         if not username or not isinstance(username, str):
             return JsonResponse({
                 "status": "error",
                 "message": "Invalid username provided"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch all users
         users = db.child("users").get()
         if not users:
             return JsonResponse({
@@ -380,7 +368,6 @@ def get_latest_itinerary(request, username):
                 "message": "No users found in system"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Find user by username
         user_data = None
         for user in users.each():
             if user.val().get("username") == username:
@@ -393,7 +380,6 @@ def get_latest_itinerary(request, username):
                 "message": "User not found"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Get packages list
         packages = user_data.get("packages", [])
         if not packages:
             return JsonResponse({
@@ -401,10 +387,8 @@ def get_latest_itinerary(request, username):
                 "message": "You haven't visited any places yet... create your own package 💫✈️"
             }, status=status.HTTP_200_OK)
 
-        # Get latest package based on index
         latest_package = packages[-1]
 
-        # Parse itinerary only if it's a string
         itinerary = latest_package.get("itinerary")
         if isinstance(itinerary, str):
             try:
@@ -436,16 +420,13 @@ def get_latest_itinerary(request, username):
 @api_view(['GET'])
 def get_recent_packages(request, username):
     try:
-        # Validate username
         if not username or not isinstance(username, str):
             return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch the user from Firebase
         users = db.child("users").get()
         if not users:
             return JsonResponse({"status": "error", "message": "No users found in system"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Find the user
         user_data = None
         for user in users.each():
             if user.val().get("username") == username:
@@ -455,7 +436,6 @@ def get_recent_packages(request, username):
         if not user_data:
             return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Fetch the packages for the user
         packages = user_data.get("packages", [])
         if not packages:
             return JsonResponse({
@@ -464,7 +444,6 @@ def get_recent_packages(request, username):
                 "recentPackages": []
             }, status=status.HTTP_200_OK)
 
-        # Return the most recent packages (last 5)
         recent_packages = packages[-5:] if len(packages) > 5 else packages
 
         return JsonResponse({
@@ -480,16 +459,13 @@ def get_recent_packages(request, username):
 @api_view(['GET'])
 def get_user_profile(request, username):
     try:
-        # Validate input
         if not username or not isinstance(username, str):
             return JsonResponse({"status": "error", "message": "Invalid username provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch users from Firebase
         users = db.child("users").get()
         if not users:
             return JsonResponse({"status": "error", "message": "No users found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Search for user by username
         user_data = None
         for user in users.each():
             if user.val().get("username") == username:
@@ -499,7 +475,6 @@ def get_user_profile(request, username):
         if not user_data:
             return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Prepare and return the user profile with only the required fields
         profile = {
             "email": user_data.get("email"),
             "username": user_data.get("username"),
@@ -522,30 +497,26 @@ def get_user_profile(request, username):
 def update_user(request, username):
     print("[DEBUG] Update endpoint hit.")
     try:
-        # Get the data from the request
         data = request.data
         print("[DEBUG] Received data:", data)
 
         name = data.get('name')
         email = data.get('email')
         phone = data.get('phoneNumber')
-        dob = data.get('dob')  # Date of Birth
+        dob = data.get('dob')  
 
-        # ✅ Debug Field Values
         print("[DEBUG] name:", name)
         print("[DEBUG] email:", email)
         print("[DEBUG] phone:", phone)
         print("[DEBUG] dob:", dob)
 
-        # ✅ Check all fields are present and not empty
         required_fields = [name, email, phone, dob]
         if any(field is None or str(field).strip() == '' for field in required_fields):
             print("[DEBUG] Missing required fields.")
             return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Calculate age from DOB
         try:
-            dob_date = datetime.strptime(dob, '%Y-%m-%d')  # Assuming dob is in 'YYYY-MM-DD' format
+            dob_date = datetime.strptime(dob, '%Y-%m-%d')
             today = datetime.today()
             age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
             print("[DEBUG] Age calculated:", age)
@@ -553,7 +524,6 @@ def update_user(request, username):
             print("[ERROR] Error calculating age:", str(e))
             return JsonResponse({"status": "error", "message": "Invalid date format for DOB"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Check if username exists in the database
         print("[DEBUG] Checking if user exists in the database for username:", username)
         user_ref = db.child("users").order_by_child("username").equal_to(username).get()
 
@@ -561,11 +531,9 @@ def update_user(request, username):
             print("[DEBUG] User not found in the database.")
             return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # ✅ Update user details in the database
         print("[DEBUG] Updating user details in Firebase...")
-        user_key = list(user_ref.val().keys())[0]  # Get the user key for the matching username
+        user_key = list(user_ref.val().keys())[0]  
 
-        # Updating the user data in Firebase
         db.child("users").child(user_key).update({
             "name": name,
             "email": email,
@@ -574,7 +542,6 @@ def update_user(request, username):
             "age": age,
         })
 
-        # Success response
         return JsonResponse({"status": "success", "message": "User updated successfully"}, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -586,33 +553,27 @@ def update_user(request, username):
 def change_password(request, username):
     print("[DEBUG] Change password endpoint hit.")
     try:
-        # Get the data from the request
         data = request.data
         print("[DEBUG] Received data:", data)
 
         current_password = data.get('currentPassword')
         new_password = data.get('newPassword')
 
-        # ✅ Debug Field Values
         print("[DEBUG] current_password:", current_password)
         print("[DEBUG] new_password:", new_password)
 
-        # ✅ Check if fields are present and not empty
         if not current_password or not new_password:
             print("[DEBUG] Missing current or new password.")
             return JsonResponse({"status": "error", "message": "Current and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Check if new password is the same as the current password
         if current_password == new_password:
             print("[DEBUG] New password is the same as the current password.")
             return JsonResponse({"status": "error", "message": "New password shouldn't be the same as the old password"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Check if new password is strong enough
         if len(new_password) < 6:
             print("[DEBUG] New password too short.")
             return JsonResponse({"status": "error", "message": "New password must be at least 6 characters"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Check if username exists in the database
         print("[DEBUG] Checking if user exists in the database for username:", username)
         user_ref = db.child("users").order_by_child("username").equal_to(username).get()
 
@@ -620,16 +581,13 @@ def change_password(request, username):
             print("[DEBUG] User not found in the database.")
             return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # ✅ Fetch current password from the user's data
         user_data = list(user_ref.val().values())[0]
         stored_password = user_data.get("password")
 
-        # ✅ Compare current password with stored password
         if current_password != stored_password:
             print("[DEBUG] Current password does not match stored password.")
             return JsonResponse({"status": "error", "message": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Update password
         print("[DEBUG] Updating password within the user document in Firebase...")
         db.child("users").child(list(user_ref.val().keys())[0]).update({
             "password": new_password,
@@ -646,7 +604,6 @@ def get_package_details_by_id(request, username, package_id):
         print("[DEBUG] Received request for username:", username)
         print("[DEBUG] Received package_id:", package_id)
 
-        # Fetch all users from Firebase
         users = db.child("users").get()
 
         if not users:
@@ -656,7 +613,6 @@ def get_package_details_by_id(request, username, package_id):
                 "message": "No users found in the system"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Find the user by username
         user_data = None
         for user in users.each():
             if user.val().get("username") == username:
@@ -672,7 +628,6 @@ def get_package_details_by_id(request, username, package_id):
 
         print(f"[DEBUG] User data found: {user_data}")
 
-        # Get the packages list for the user
         packages = user_data.get("packages", [])
         if not packages:
             print(f"[ERROR] No packages found for user {username}")
@@ -681,7 +636,6 @@ def get_package_details_by_id(request, username, package_id):
                 "message": "No packages found for this user"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Search for the specific package by ID
         package = None
         for pkg in packages:
             if pkg.get("package_id") == package_id:
@@ -695,7 +649,6 @@ def get_package_details_by_id(request, username, package_id):
                 "message": "Package not found"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Return the package details
         return JsonResponse({
             "status": "success",
             "package": package
@@ -710,11 +663,9 @@ def get_package_details_by_id(request, username, package_id):
 @api_view(['GET'])
 def check_active_trips(request, username):
     try:
-        # Get current date
         today = datetime.now().date()
         print(f"[DEBUG] Today's date: {today}")
         
-        # Fetch all users
         users = db.child("users").get()
         if users.val() is None:
             print("[DEBUG] No users found in database")
@@ -723,7 +674,6 @@ def check_active_trips(request, username):
                 "message": "No users found in database"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Find user by username
         user_found = False
         has_active_trip = False
         recent_package_info = None
@@ -739,19 +689,15 @@ def check_active_trips(request, username):
                     print("[DEBUG] No packages found for user")
                     break
                     
-                # Get the most recent package (last in the array)
                 recent_package = packages[-1]
                 package_details = recent_package.get("input", {})
                 print(f"[DEBUG] Package details: {package_details}")
                 
-                # Parse start and end dates from package details
                 try:
-                    # Get raw date strings
                     start_date_str = package_details.get("startDate", "")
                     end_date_str = package_details.get("endDate", "")
                     print(f"[DEBUG] Raw dates - Start: '{start_date_str}', End: '{end_date_str}'")
 
-                    # Validate date strings
                     if not start_date_str or not end_date_str:
                         print("[DEBUG] Missing start or end date")
                         return JsonResponse({
@@ -763,13 +709,12 @@ def check_active_trips(request, username):
                             }
                         }, status=status.HTTP_400_BAD_REQUEST)
 
-                    # Try parsing with different formats
                     date_formats_to_try = [
-                        "%d-%m-%Y",  # 15-04-2025
-                        "%d-%m-%y",  # 15-04-25
-                        "%Y-%m-%d",  # 2025-04-15
-                        "%d/%m/%Y",  # 15/04/2025
-                        "%d/%m/%y"   # 15/04/25
+                        "%d-%m-%Y",  
+                        "%d-%m-%y",  
+                        "%Y-%m-%d",  
+                        "%d/%m/%Y",  
+                        "%d/%m/%y"
                     ]
 
                     start_date = None
@@ -802,7 +747,7 @@ def check_active_trips(request, username):
                     print(f"[DEBUG] Successfully parsed dates using format: {used_format}")
                     print(f"[DEBUG] Parsed dates - Start: {start_date}, End: {end_date}")
 
-                    # Check if today is within the trip dates (inclusive)
+                    
                     date_comparison = {
                         "today_gte_start": today >= start_date,
                         "today_lte_end": today <= end_date
@@ -813,7 +758,7 @@ def check_active_trips(request, username):
                         has_active_trip = True
                         print("[DEBUG] Active trip found")
                         
-                    # Prepare package info for response
+                    
                     recent_package_info = {
                         "startDate": start_date.strftime("%Y-%m-%d"),
                         "endDate": end_date.strftime("%Y-%m-%d"),
@@ -877,10 +822,8 @@ def check_active_trips(request, username):
 @api_view(['GET'])
 def get_trip_stats(request, username):
     try:
-        # Get current date for filtering
         today = datetime.now().date()
         
-        # Fetch user's packages from Firebase
         users = db.child("users").get()
         if users.val() is None:
             return JsonResponse({
@@ -888,7 +831,6 @@ def get_trip_stats(request, username):
                 "message": "No users found"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Find the specific user
         user_data = None
         for user in users.each():
             if user.val().get("username") == username:
@@ -906,11 +848,9 @@ def get_trip_stats(request, username):
         upcoming_trips = 0
         completed_trips = 0
 
-        # Analyze each package
         for package in packages:
             package_details = package.get("input", {})
             try:
-                # Parse dates (using the format we established earlier)
                 start_date = datetime.strptime(package_details.get("startDate"), "%d-%m-%Y").date()
                 end_date = datetime.strptime(package_details.get("endDate"), "%d-%m-%Y").date()
                   
@@ -936,13 +876,11 @@ def get_trip_stats(request, username):
             "status": "error",
             "message": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# Load spaCy's English model
 nlp = spacy.load("en_core_web_sm")
 
 os.environ["GROQ_API_KEY"] = "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"
 WEATHER_API_KEY = "c092817bdb9a68d7bab9fc141fc91944"
 
-# Initialize Agent
 agent = Agent(
     name="Travel Information Assistant",
     model=Groq(id="gemma2-9b-it"),

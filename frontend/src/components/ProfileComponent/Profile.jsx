@@ -62,7 +62,6 @@ const Profile = () => {
 
   return (
     <div className="container my-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      {/* Gradient Background Section */}
       <div className="position-absolute top-0 start-0 w-100" style={{
         height: '300px',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -70,9 +69,7 @@ const Profile = () => {
         borderRadius: '0 0 20px 20px'
       }}></div>
 
-      {/* Main Profile Card */}
       <div className="card shadow-lg rounded-4 overflow-hidden border-0">
-        {/* Profile Header */}
         <div className="profile-header" style={{
           background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2))',
           padding: '2rem',
@@ -131,9 +128,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Body */}
         <div className="card-body p-0">
-          {/* Tabs Navigation */}
           <ul className="nav nav-tabs border-0 px-4" style={{ marginTop: '-1rem' }}>
             <li className="nav-item">
               <button 

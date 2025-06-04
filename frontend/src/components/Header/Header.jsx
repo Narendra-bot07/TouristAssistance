@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min'; // Add this import
+import 'bootstrap/dist/js/bootstrap.bundle.min'; 
 import "./Header.css";
 
 const Header = () => {
@@ -135,7 +135,6 @@ const NavItem = ({ to, label }) => (
   </li>
 );
 
-// Reusable NavButton component
 const NavButton = ({ to, label, type }) => (
   <li className="nav-item mx-2">
     <Link

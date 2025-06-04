@@ -3,18 +3,14 @@ import axios from "axios";
 import { Button, Form, Alert } from 'react-bootstrap';
 
 const ChangePassword = ({ username }) => {
-  // State to hold the passwords
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Password regex for validation
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-  // Function to handle password change
   const handleChangePassword = async () => {
-    // Reset messages
     setMessage("");
     setError("");
 
@@ -34,9 +30,8 @@ const ChangePassword = ({ username }) => {
     }
 const username = localStorage.getItem('userName');
     try {
-      // Send the request to the Django backend
       const response = await axios.post(
-        `http://localhost:8000/api/change-password/${username}/`, // Adjust your server URL
+        `http://localhost:8000/api/change-password/${username}/`, 
         {
           currentPassword: currentPassword,
           newPassword: newPassword,

@@ -10,7 +10,6 @@ const HomePage = () => {
   const [itineraries, setItineraries] = useState([]);
 
   useEffect(() => {
-    // Simulating an API call with mock data
     const fetchItineraries = async () => {
       const data = [
         {
@@ -40,7 +39,6 @@ const HomePage = () => {
 
   return (
     <div className="homepage">
-      {/* Hero Section */}
       <section className="hero-section-home text-center text-white">
         <motion.div
           initial={{ opacity: 0, y: -50 }}
@@ -62,7 +60,6 @@ const HomePage = () => {
         </motion.div>
       </section>
 
-      {/* Itinerary Cards */}
       <Container className="my-5">
         <motion.h2
           initial={{ opacity: 0 }}

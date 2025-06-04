@@ -73,7 +73,6 @@ const PackagesArchivePage = () => {
 
   return (
     <Box className="packages-archive">
-      {/* Hero Section */}
       <section className="hero-section-archive text-center text-white">
         <motion.div
           initial={{ opacity: 0, y: -50 }}
@@ -111,7 +110,6 @@ const PackagesArchivePage = () => {
         </motion.div>
       </section>
 
-      {/* Package Cards */}
       <Box sx={{ my: 5, px: { xs: 2, md: 0 } }}>
         <motion.div
           initial={{ opacity: 0 }}

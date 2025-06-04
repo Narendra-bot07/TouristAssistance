@@ -5,7 +5,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
 
-// Fetch Unsplash image
 const fetchUnsplashImage = async (query) => {
   try {
     const res = await axios.get('https://api.unsplash.com/search/photos', {

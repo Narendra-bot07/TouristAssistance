@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaRobot, FaTimes } from 'react-icons/fa';
-import './ChatBotIcon.css'; // You might not need this if you use only Bootstrap
+import './ChatBotIcon.css'; s
 import ChatBot from '../ChatBot/ChatBot';
 
 const ChatBotIcon = () => {

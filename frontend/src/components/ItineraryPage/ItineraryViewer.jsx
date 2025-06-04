@@ -227,7 +227,6 @@ const ItineraryViewer = () => {
         ✈ Your Travel Adventure
       </motion.h2>
 
-      {/* Day Navigation Controls */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <motion.button
           className="btn btn-outline-primary rounded-circle p-3"
@@ -255,7 +254,6 @@ const ItineraryViewer = () => {
         </motion.button>
       </div>
 
-      {/* Day Status Toggle */}
       <div className="text-center mb-4">
         <motion.button
           className={`btn ${dayData.status === 'Done' ? 'btn-success' : 'btn-outline-secondary'} rounded-circle p-4`}
