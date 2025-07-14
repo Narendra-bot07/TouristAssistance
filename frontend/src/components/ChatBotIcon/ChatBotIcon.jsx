@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaRobot, FaTimes } from 'react-icons/fa';
-import './ChatBotIcon.css'; s
+import './ChatBotIcon.css'; 
 import ChatBot from '../ChatBot/ChatBot';
 
 const ChatBotIcon = () => {
