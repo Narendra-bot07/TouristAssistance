@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaHotel, FaUtensils, FaMapSigns, FaCheckCircle, FaPlane, 
   FaGlobe, FaWallet, FaList, FaArrowRight, FaArrowLeft, 
-  FaRegCalendarAlt, FaRegSun, FaRegMoon, FaPlusCircle 
+  FaRegCalendarAlt, FaPlusCircle 
 } from 'react-icons/fa';
 import { GiPathDistance } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
@@ -204,7 +204,7 @@ const ItineraryViewer = () => {
               </Button>
             </motion.div>
             <p className="mt-3 text-muted">
-              or <a href="#" onClick={() => navigate('/browse_packages')} className="text-decoration-none">browse our pre-made packages</a>
+              or <a href="/browse_packages" onClick={() => navigate('/browse_packages')} className="text-decoration-none">browse our pre-made packages</a>
             </p>
           </Card>
         </motion.div>

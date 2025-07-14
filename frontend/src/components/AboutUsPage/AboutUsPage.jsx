@@ -6,26 +6,6 @@ import { FaPlane, FaStar, FaUsers, FaRocket } from 'react-icons/fa';
 import './AboutUsPage.css';
 
 const AboutUsPage = () => {
-  const teamMembers = [
-    {
-      id: 1,
-      name: 'Jane Doe',
-      role: 'Travel Expert',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    },
-    {
-      id: 2,
-      name: 'John Smith',
-      role: 'Itinerary Planner',
-      image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    },
-    {
-      id: 3,
-      name: 'Emma Wilson',
-      role: 'Customer Support',
-      image: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    },
-  ];
 
   const values = [
     { icon: <FaStar />, title: 'Excellence', description: 'We strive for top-quality experiences in every trip.' },
