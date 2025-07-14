@@ -81,6 +81,7 @@ export default function RegisterPage() {
           'Content-Type': 'application/json',
         },
       });
+      console.log(response.data);
 
       navigate('/login');
     } catch (error) {
