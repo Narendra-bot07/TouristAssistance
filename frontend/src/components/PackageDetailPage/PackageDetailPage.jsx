@@ -1,5 +1,3 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
 import { Typography, Container } from '@mui/material';
 import TourInformation from './TourInformation';
 import TourPlan from './TourPlan';

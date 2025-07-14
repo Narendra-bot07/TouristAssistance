@@ -320,8 +320,8 @@ export default function RegisterPage() {
                     label={
                       <>
                         I agree to the{' '}
-                        <a href="#" className="text-primary">terms</a> and{' '}
-                        <a href="#" className="text-primary">privacy policy</a>
+                        <a href="/" className="text-primary">terms</a> and{' '}
+                        <a href="/" className="text-primary">privacy policy</a>
                       </>
                     }
                     name="acceptedTerms"
