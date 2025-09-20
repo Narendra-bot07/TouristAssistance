@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user, login_user, get_user_by_email,create_package,get_latest_itinerary,get_recent_packages,get_user_profile,update_user,change_password,get_package_details_by_id,check_active_trips,get_trip_stats,chatbot_view
+from .views import register_user, login_user, get_user_by_email,create_package,get_latest_itinerary,get_recent_packages,get_user_profile,update_user,change_password,get_package_details_by_id,check_active_trips,get_trip_stats,chatbot_view, test_get
 
 urlpatterns = [
     path('register/', register_user),
@@ -14,5 +14,6 @@ urlpatterns = [
     path('package/<str:username>/<str:package_id>/',get_package_details_by_id, name='get_package_details'),
     path('check-active-trips/<str:username>/', check_active_trips, name='check_active_trips'),
     path('trip-stats/<str:username>/', get_trip_stats, name='get_trip_stats'),
-    path('chatbot/',chatbot_view,name='chat_bot')
+    path('chatbot/',chatbot_view,name='chat_bot'),
+    path('test-get/', test_get, name='test_get'),
 ]

@@ -42,6 +42,11 @@ model = genai.GenerativeModel('gemini-2.0-flash')
 
 
 
+@apiview(['GET'])
+def test_get(request):
+    return JsonResponse({"status": "success", "message": "API is working!"}, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 def register_user(request):
     print("[DEBUG] Register endpoint hit.")
