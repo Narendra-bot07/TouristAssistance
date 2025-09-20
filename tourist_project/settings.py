@@ -125,7 +125,7 @@ STATICFILES_DIRS = [
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
-ALLOWED_HOSTS = ['*']  # For local testing or specific domains in production
+ALLOWED_HOSTS = ['*', ".vercel.app"]  # For local testing or specific domains in production
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
