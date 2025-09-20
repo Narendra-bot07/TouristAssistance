@@ -42,7 +42,7 @@ model = genai.GenerativeModel('gemini-2.0-flash')
 
 
 
-@apiview(['GET'])
+@api_view(['GET'])
 def test_get(request):
     return JsonResponse({"status": "success", "message": "API is working!"}, status=status.HTTP_200_OK)
 
