@@ -11,6 +11,9 @@ import {
 import { GiPathDistance } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import './ItineraryViewer.css';
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
 
@@ -39,8 +42,6 @@ const ItineraryViewer = () => {
   const [loading, setLoading] = useState(true);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const navigate = useNavigate();
-
-  const baseUrl = import.meta.env.BASE_URL;
 
   useEffect(() => {
     const fetchItinerary = async () => {
