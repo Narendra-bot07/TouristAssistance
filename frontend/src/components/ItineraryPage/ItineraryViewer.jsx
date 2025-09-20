@@ -102,7 +102,7 @@ const ItineraryViewer = () => {
     };
 
     fetchItinerary();
-  }, [baseUrl]);
+  }, []);
 
   const toggleActivityStatus = (dayIndex, activityIndex) => {
     const updated = { ...tripData };
