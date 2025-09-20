@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import { FaUser, FaUserTag, FaEnvelope, FaPhone, FaLock, FaBirthdayCake, FaFacebookF, FaTwitter, FaGoogle, FaEye, FaEyeSlash } from 'react-icons/fa';
 import axios from 'axios';
 import './RegistrationPage.css';
-const baseUrl = import.meta.env.BASE_URL;
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({

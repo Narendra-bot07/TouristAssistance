@@ -5,8 +5,9 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { FaUser, FaSave, FaArrowLeft, FaEnvelope, FaPhone, FaBirthdayCake, FaUserTag } from 'react-icons/fa';
 import './ProfileEdit.css';
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 
 const ProfileEdit = () => {
   const [profile, setProfile] = useState({

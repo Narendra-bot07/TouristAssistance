@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaFacebookF, FaTwitter, FaGoogle } from 'react-icons/fa';
 import axios from 'axios';
 import './LoginPage.css';
-const baseUrl = import.meta.env.BASE_URL;
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({

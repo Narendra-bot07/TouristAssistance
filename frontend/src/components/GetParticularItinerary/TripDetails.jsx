@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
 

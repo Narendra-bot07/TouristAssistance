@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './ChatBot.css'; 
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 const ChatBot = () => {
   const [messages, setMessages] = useState([
     { from: 'bot', text: "Hello! I'm your travel assistant. Ask me about places or weather!" }

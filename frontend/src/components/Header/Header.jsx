@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; 
-import "./Header.css";
+import "./Header.css"; 
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

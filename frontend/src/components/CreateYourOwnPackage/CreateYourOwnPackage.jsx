@@ -6,8 +6,10 @@ import { Card, Container, Form, Button, Row, Col, Alert } from 'react-bootstrap'
 import { motion } from 'framer-motion';
 import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaUtensils, FaWallet, FaPlane, FaMapSigns, FaGlobe } from 'react-icons/fa';
 import './CreateYourOwnPackage.css';
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
+
 
 const CreateYourOwnPackage = () => {
   const navigate = useNavigate();

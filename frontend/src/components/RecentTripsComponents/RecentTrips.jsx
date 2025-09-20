@@ -3,8 +3,9 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 
 const RecentTrips = () => {
   const [packages, setPackages] = useState([]);

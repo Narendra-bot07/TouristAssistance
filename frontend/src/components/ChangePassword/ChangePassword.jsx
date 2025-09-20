@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Button, Form, Alert } from 'react-bootstrap';
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 
 const ChangePassword = ({ username }) => {
   const [currentPassword, setCurrentPassword] = useState("");

@@ -5,8 +5,9 @@ import { NavLink } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import "./Profile.css"
+import config from "../../config.js";
 
-const baseUrl = import.meta.env.BASE_URL;
+const baseUrl = config.BASE_URL;
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
