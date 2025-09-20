@@ -49,10 +49,10 @@ def test_get(request):
 
 @api_view(['POST'])
 def register_user(request):
-    print("[DEBUG] Register endpoint hit.")
+    # print("[DEBUG] Register endpoint hit.")
     try:
         data = request.data
-        print("[DEBUG] Received data:", data)
+        # print("[DEBUG] Received data:", data)
 
         username = data.get('username')
         name = data.get('name')
@@ -62,13 +62,13 @@ def register_user(request):
         confirm_password = data.get('confirmPassword')
         dob_str = data.get('dob')  
        
-        print("[DEBUG] username:", username)
-        print("[DEBUG] name:", name)
-        print("[DEBUG] email:", email)
-        print("[DEBUG] phone:", phone)
-        print("[DEBUG] password:", password)
-        print("[DEBUG] confirm_password:", confirm_password)
-        print("[DEBUG] dob:", dob_str)
+        # print("[DEBUG] username:", username)
+        # print("[DEBUG] name:", name)
+        # print("[DEBUG] email:", email)
+        # print("[DEBUG] phone:", phone)
+        # print("[DEBUG] password:", password)
+        # print("[DEBUG] confirm_password:", confirm_password)
+        # print("[DEBUG] dob:", dob_str)
 
       
         required_fields = [username, name, email, phone, password, confirm_password, dob_str]
@@ -124,7 +124,7 @@ def register_user(request):
             response.raise_for_status()
             result = response.json()
             if result.get("state") != "deliverable":
-                print("Email is Invalid")
+                # print("Email is Invalid")
                 return JsonResponse({"status": "error", "message": "Invalid Email"}, status=400)
         except requests.RequestException as e:
             return JsonResponse({"status": "error", "message": "Invalid Email"}, status=400)
@@ -141,7 +141,7 @@ def register_user(request):
             "last_updated": datetime.now().isoformat()
         })
 
-        print("[DEBUG] Firebase push result:", result)
+        # print("[DEBUG] Firebase push result:", result)
         return JsonResponse({
             "status": "success",
             "message": "User registered successfully",
@@ -153,7 +153,7 @@ def register_user(request):
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        print("[ERROR]", str(e))
+        # print("[ERROR]", str(e))
         return JsonResponse({
             "status": "error",
             "message": "Registration failed",
@@ -162,11 +162,11 @@ def register_user(request):
 
 @api_view(['POST'])
 def login_user(request):
-    print("[DEBUG] Login endpoint hit.")
+    # print("[DEBUG] Login endpoint hit.")
     if request.method == 'POST':
         try:
             data = request.data
-            print("[DEBUG] Received data:", data)
+            # print("[DEBUG] Received data:", data)
 
             identifier = data.get('identifier')  
             password = data.get('password')
@@ -181,7 +181,7 @@ def login_user(request):
             for user in users.each():
                 user_data = user.val()
                 if (user_data.get("email") == identifier or user_data.get("username") == identifier) and user_data.get("password") == password:
-                    print("[DEBUG] User authenticated successfully.")
+                    # print("[DEBUG] User authenticated successfully.")
                     return JsonResponse({
                         "status": "success",
                         "message": "Login successful",
@@ -190,11 +190,11 @@ def login_user(request):
                         "name": user_data.get("name")
                     }, status=status.HTTP_200_OK)
 
-            print("[DEBUG] No matching user found.")
+            # print("[DEBUG] No matching user found.")
             return JsonResponse({"status": "error", "message": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            print("[ERROR]", str(e))
+            # print("[ERROR]", str(e))
             return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=status.HTTP_400_BAD_REQUEST)
@@ -233,20 +233,20 @@ from django.http import JsonResponse
 
 @api_view(['POST'])
 def create_package(request):
-    print("[DEBUG] Create Package endpoint hit.")
+    # print("[DEBUG] Create Package endpoint hit.")
 
     if request.method != 'POST':
         return JsonResponse({"status": "error", "message": "Invalid request method"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         data = request.data
-        print("[DEBUG] Received data:", data)
+        # print("[DEBUG] Received data:", data)
 
         username = data.get('username')
         user_input = data.get('packageDetails')
 
         if not username or not user_input:
-            print("[DEBUG] Missing username or packageDetails")
+            # print("[DEBUG] Missing username or packageDetails")
             return JsonResponse({
                 "status": "error",
                 "message": "Username and package details are required"
@@ -293,18 +293,18 @@ Instructions:
 5. Include estimated costs wherever possible.
 6. Respond ONLY with valid JSON following this exact structure.
 """
-        print("[DEBUG] Sent prompt to Gemini:", prompt)
+        # print("[DEBUG] Sent prompt to Gemini:", prompt)
 
         gemini_response = model.generate_content(prompt)
         response_text = gemini_response.text
-        print("[DEBUG] Gemini raw response:", response_text)
+        # print("[DEBUG] Gemini raw response:", response_text)
 
         try:
             clean_response = re.sub(r'```json|```', '', response_text).strip()
             itinerary = json.loads(clean_response)
-            print("[DEBUG] Successfully parsed itinerary.")
+            # print("[DEBUG] Successfully parsed itinerary.")
         except json.JSONDecodeError as e:
-            print("[ERROR] Failed to parse Gemini response:", e)
+            # print("[ERROR] Failed to parse Gemini response:", e)
             try:
                 json_start = response_text.find('[')
                 json_end = response_text.rfind(']') + 1
@@ -314,7 +314,7 @@ Instructions:
                 else:
                     raise ValueError("No valid JSON found in response")
             except Exception as e2:
-                print("[ERROR] Secondary parsing failed:", e2)
+                # print("[ERROR] Secondary parsing failed:", e2)
                 return JsonResponse({
                     "status": "error",
                     "message": "Failed to parse itinerary JSON",
@@ -322,7 +322,7 @@ Instructions:
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         package_id = str(uuid4())
-        print(f"[DEBUG] Generated Package ID: {package_id}")
+        # print(f"[DEBUG] Generated Package ID: {package_id}")
 
         users = db.child("users").get()
         if users.val() is None:
@@ -339,7 +339,7 @@ Instructions:
                     "itinerary": itinerary
                 })
                 db.child("users").child(user.key()).update({"packages": user_packages})
-                print("[DEBUG] Successfully saved itinerary for user:", username)
+                # print("[DEBUG] Successfully saved itinerary for user:", username)
                 user_found = True
                 break
 
@@ -354,7 +354,7 @@ Instructions:
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        print("[ERROR] Exception occurred:", str(e))
+        # print("[ERROR] Exception occurred:", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
@@ -400,7 +400,7 @@ def get_latest_itinerary(request, username):
                 cleaned_str = re.sub(r'```json|```', '', itinerary).strip()
                 parsed_itinerary = json.loads(cleaned_str)
             except Exception as e:
-                print("[ERROR] Failed to parse itinerary string:", e)
+                # print("[ERROR] Failed to parse itinerary string:", e)
                 return JsonResponse({
                     "status": "error",
                     "message": "Itinerary parsing failed. Invalid format."
@@ -415,7 +415,7 @@ def get_latest_itinerary(request, username):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print("[ERROR]", str(e))
+        # print("[ERROR]", str(e))
         return JsonResponse({
             "status": "error",
             "message": "An internal server error occurred"
@@ -500,43 +500,43 @@ def get_user_profile(request, username):
 
 @api_view(['POST'])
 def update_user(request, username):
-    print("[DEBUG] Update endpoint hit.")
+    # print("[DEBUG] Update endpoint hit.")
     try:
         data = request.data
-        print("[DEBUG] Received data:", data)
+        # print("[DEBUG] Received data:", data)
 
         name = data.get('name')
         email = data.get('email')
         phone = data.get('phoneNumber')
         dob = data.get('dob')  
 
-        print("[DEBUG] name:", name)
-        print("[DEBUG] email:", email)
-        print("[DEBUG] phone:", phone)
-        print("[DEBUG] dob:", dob)
+        # print("[DEBUG] name:", name)
+        # print("[DEBUG] email:", email)
+        # print("[DEBUG] phone:", phone)
+        # print("[DEBUG] dob:", dob)
 
         required_fields = [name, email, phone, dob]
         if any(field is None or str(field).strip() == '' for field in required_fields):
-            print("[DEBUG] Missing required fields.")
+            # print("[DEBUG] Missing required fields.")
             return JsonResponse({"status": "error", "message": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             dob_date = datetime.strptime(dob, '%Y-%m-%d')
             today = datetime.today()
             age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
-            print("[DEBUG] Age calculated:", age)
+            # print("[DEBUG] Age calculated:", age)
         except Exception as e:
-            print("[ERROR] Error calculating age:", str(e))
+            # print("[ERROR] Error calculating age:", str(e))
             return JsonResponse({"status": "error", "message": "Invalid date format for DOB"}, status=status.HTTP_400_BAD_REQUEST)
 
-        print("[DEBUG] Checking if user exists in the database for username:", username)
+        # print("[DEBUG] Checking if user exists in the database for username:", username)
         user_ref = db.child("users").order_by_child("username").equal_to(username).get()
 
         if user_ref.val() is None:
-            print("[DEBUG] User not found in the database.")
+            # print("[DEBUG] User not found in the database.")
             return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        print("[DEBUG] Updating user details in Firebase...")
+        # print("[DEBUG] Updating user details in Firebase...")
         user_key = list(user_ref.val().keys())[0]  
 
         db.child("users").child(user_key).update({
@@ -550,50 +550,50 @@ def update_user(request, username):
         return JsonResponse({"status": "success", "message": "User updated successfully"}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print("[ERROR] Exception occurred:", str(e))
+        # print("[ERROR] Exception occurred:", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
 def change_password(request, username):
-    print("[DEBUG] Change password endpoint hit.")
+    # print("[DEBUG] Change password endpoint hit.")
     try:
         data = request.data
-        print("[DEBUG] Received data:", data)
+        # print("[DEBUG] Received data:", data)
 
         current_password = data.get('currentPassword')
         new_password = data.get('newPassword')
 
-        print("[DEBUG] current_password:", current_password)
-        print("[DEBUG] new_password:", new_password)
+        # print("[DEBUG] current_password:", current_password)
+        # print("[DEBUG] new_password:", new_password)
 
         if not current_password or not new_password:
-            print("[DEBUG] Missing current or new password.")
+            # print("[DEBUG] Missing current or new password.")
             return JsonResponse({"status": "error", "message": "Current and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         if current_password == new_password:
-            print("[DEBUG] New password is the same as the current password.")
+            # print("[DEBUG] New password is the same as the current password.")
             return JsonResponse({"status": "error", "message": "New password shouldn't be the same as the old password"}, status=status.HTTP_400_BAD_REQUEST)
 
         if len(new_password) < 6:
-            print("[DEBUG] New password too short.")
+            # print("[DEBUG] New password too short.")
             return JsonResponse({"status": "error", "message": "New password must be at least 6 characters"}, status=status.HTTP_400_BAD_REQUEST)
 
-        print("[DEBUG] Checking if user exists in the database for username:", username)
+        # print("[DEBUG] Checking if user exists in the database for username:", username)
         user_ref = db.child("users").order_by_child("username").equal_to(username).get()
 
         if user_ref.val() is None:
-            print("[DEBUG] User not found in the database.")
+            # print("[DEBUG] User not found in the database.")
             return JsonResponse({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user_data = list(user_ref.val().values())[0]
         stored_password = user_data.get("password")
 
         if current_password != stored_password:
-            print("[DEBUG] Current password does not match stored password.")
+            # print("[DEBUG] Current password does not match stored password.")
             return JsonResponse({"status": "error", "message": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
 
-        print("[DEBUG] Updating password within the user document in Firebase...")
+        # print("[DEBUG] Updating password within the user document in Firebase...")
         db.child("users").child(list(user_ref.val().keys())[0]).update({
             "password": new_password,
         })
@@ -601,18 +601,18 @@ def change_password(request, username):
         return JsonResponse({"status": "success", "message": "Password updated successfully"}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print("[ERROR] Exception occurred:", str(e))
+        # print("[ERROR] Exception occurred:", str(e))
         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 @api_view(['GET'])
 def get_package_details_by_id(request, username, package_id):
     try:
-        print("[DEBUG] Received request for username:", username)
-        print("[DEBUG] Received package_id:", package_id)
+        # print("[DEBUG] Received request for username:", username)
+        # print("[DEBUG] Received package_id:", package_id)
 
         users = db.child("users").get()
 
         if not users:
-            print("[ERROR] No users found in the database")
+            # print("[ERROR] No users found in the database")
             return JsonResponse({
                 "status": "error",
                 "message": "No users found in the system"
@@ -625,17 +625,17 @@ def get_package_details_by_id(request, username, package_id):
                 break
 
         if not user_data:
-            print(f"[ERROR] User with username {username} not found")
+            # print(f"[ERROR] User with username {username} not found")
             return JsonResponse({
                 "status": "error",
                 "message": "User not found"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        print(f"[DEBUG] User data found: {user_data}")
+        # print(f"[DEBUG] User data found: {user_data}")
 
         packages = user_data.get("packages", [])
         if not packages:
-            print(f"[ERROR] No packages found for user {username}")
+            # print(f"[ERROR] No packages found for user {username}")
             return JsonResponse({
                 "status": "error",
                 "message": "No packages found for this user"
@@ -648,7 +648,7 @@ def get_package_details_by_id(request, username, package_id):
                 break
 
         if not package:
-            print(f"[ERROR] Package with ID {package_id} not found")
+            # print(f"[ERROR] Package with ID {package_id} not found")
             return JsonResponse({
                 "status": "error",
                 "message": "Package not found"
@@ -660,7 +660,7 @@ def get_package_details_by_id(request, username, package_id):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print("[ERROR] Exception occurred:", str(e))
+        # print("[ERROR] Exception occurred:", str(e))
         return JsonResponse({
             "status": "error",
             "message": "An internal server error occurred"
@@ -669,11 +669,11 @@ def get_package_details_by_id(request, username, package_id):
 def check_active_trips(request, username):
     try:
         today = datetime.now().date()
-        print(f"[DEBUG] Today's date: {today}")
+        # print(f"[DEBUG] Today's date: {today}")
         
         users = db.child("users").get()
         if users.val() is None:
-            print("[DEBUG] No users found in database")
+            # print("[DEBUG] No users found in database")
             return JsonResponse({
                 "status": "error",
                 "message": "No users found in database"
@@ -688,23 +688,23 @@ def check_active_trips(request, username):
             if user_data.get("username") == username:
                 user_found = True
                 packages = user_data.get("packages", [])
-                print(f"[DEBUG] Found user: {username} with {len(packages)} packages")
+                # print(f"[DEBUG] Found user: {username} with {len(packages)} packages")
                 
                 if not packages:
-                    print("[DEBUG] No packages found for user")
+                    # print("[DEBUG] No packages found for user")
                     break
                     
                 recent_package = packages[-1]
                 package_details = recent_package.get("input", {})
-                print(f"[DEBUG] Package details: {package_details}")
+                # print(f"[DEBUG] Package details: {package_details}")
                 
                 try:
                     start_date_str = package_details.get("startDate", "")
                     end_date_str = package_details.get("endDate", "")
-                    print(f"[DEBUG] Raw dates - Start: '{start_date_str}', End: '{end_date_str}'")
+                    # print(f"[DEBUG] Raw dates - Start: '{start_date_str}', End: '{end_date_str}'")
 
                     if not start_date_str or not end_date_str:
-                        print("[DEBUG] Missing start or end date")
+                        # print("[DEBUG] Missing start or end date")
                         return JsonResponse({
                             "status": "error",
                             "message": "Missing start or end date in package",
@@ -738,7 +738,7 @@ def check_active_trips(request, username):
                             continue
 
                     if not start_date or not end_date:
-                        print("[DEBUG] Failed to parse dates with any format")
+                        # print("[DEBUG] Failed to parse dates with any format")
                         return JsonResponse({
                             "status": "error",
                             "message": "Could not parse dates with any known format",
@@ -749,19 +749,19 @@ def check_active_trips(request, username):
                             }
                         }, status=status.HTTP_400_BAD_REQUEST)
 
-                    print(f"[DEBUG] Successfully parsed dates using format: {used_format}")
-                    print(f"[DEBUG] Parsed dates - Start: {start_date}, End: {end_date}")
+                    # print(f"[DEBUG] Successfully parsed dates using format: {used_format}")
+                    # print(f"[DEBUG] Parsed dates - Start: {start_date}, End: {end_date}")
 
                     
                     date_comparison = {
                         "today_gte_start": today >= start_date,
                         "today_lte_end": today <= end_date
                     }
-                    print(f"[DEBUG] Date comparison: {date_comparison}")
+                    # print(f"[DEBUG] Date comparison: {date_comparison}")
 
                     if date_comparison["today_gte_start"] and date_comparison["today_lte_end"]:
                         has_active_trip = True
-                        print("[DEBUG] Active trip found")
+                        # print("[DEBUG] Active trip found")
                         
                     
                     recent_package_info = {
@@ -777,7 +777,7 @@ def check_active_trips(request, username):
                     }
                     
                 except Exception as e:
-                    print(f"[ERROR] Date parsing failed: {str(e)}")
+                    # print(f"[ERROR] Date parsing failed: {str(e)}")
                     return JsonResponse({
                         "status": "error",
                         "message": f"Date processing failed: {str(e)}",
@@ -796,7 +796,7 @@ def check_active_trips(request, username):
                 break
 
         if not user_found:
-            print("[DEBUG] User not found")
+            # print("[DEBUG] User not found")
             return JsonResponse({
                 "status": "error",
                 "message": "User not found"
@@ -809,11 +809,11 @@ def check_active_trips(request, username):
             "package": recent_package_info,
             "message": "Active trip found" if has_active_trip else "No active trip"
         }
-        print(f"[DEBUG] Final response: {response_data}")
+        # print(f"[DEBUG] Final response: {response_data}")
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(f"[ERROR] Unexpected error: {str(e)}")
+        # print(f"[ERROR] Unexpected error: {str(e)}")
         return JsonResponse({
             "status": "error",
             "message": "Internal server error",
@@ -960,7 +960,7 @@ def get_history(location: str) -> str:
     )
     agent.print_response(prompt, callback=callback, stream=True)
     
-    print(f"History Response: {response}")
+    # print(f"History Response: {response}")
 
     return f"## 📜 History of {location}\n" + response
 
