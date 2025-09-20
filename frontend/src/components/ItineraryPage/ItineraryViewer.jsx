@@ -40,6 +40,8 @@ const ItineraryViewer = () => {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const navigate = useNavigate();
 
+  const baseUrl = import.meta.env.BASE_URL;
+
   useEffect(() => {
     const fetchItinerary = async () => {
       try {
@@ -50,7 +52,7 @@ const ItineraryViewer = () => {
           return;
         }
 
-        const response = await axios.get(`http://localhost:8000/api/get-latest-itinerary/${userEmail}`);
+        const response = await axios.get(`${baseUrl}get-latest-itinerary/${userEmail}`);
         const data = response.data;
 
         if (!data.itinerary || data.itinerary.length === 0) {

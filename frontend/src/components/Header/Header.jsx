@@ -5,6 +5,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; 
 import "./Header.css";
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
@@ -17,7 +19,7 @@ const Header = () => {
       setIsLoggedIn(true);
       setUsername(storedUsername);
       
-      axios.get(`http://localhost:8000/api/check-active-trips/${storedUsername}/`)
+      axios.get(`${baseUrl}check-active-trips/${storedUsername}/`)
         .then(response => {
           if (response.data?.hasActiveTrip) {
             setHasActiveTrip(true);

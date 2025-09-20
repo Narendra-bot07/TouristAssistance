@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './ChatBot.css'; 
+
+const baseUrl = import.meta.env.BASE_URL;
 const ChatBot = () => {
   const [messages, setMessages] = useState([
     { from: 'bot', text: "Hello! I'm your travel assistant. Ask me about places or weather!" }
@@ -17,7 +19,7 @@ const ChatBot = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8000/api/chatbot/', { message: input });
+      const res = await axios.post(`${baseUrl}chatbot/`, { message: input });
       const botReply = { from: 'bot', text: res.data.reply };
       setMessages(prev => [...prev, botReply]);
     } catch (err) {

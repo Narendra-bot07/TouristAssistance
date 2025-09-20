@@ -6,6 +6,8 @@ import axios from 'axios';
 import { FaUser, FaSave, FaArrowLeft, FaEnvelope, FaPhone, FaBirthdayCake, FaUserTag } from 'react-icons/fa';
 import './ProfileEdit.css';
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const ProfileEdit = () => {
   const [profile, setProfile] = useState({
     name: '',
@@ -27,7 +29,7 @@ const ProfileEdit = () => {
           return;
         }
 
-        const response = await axios.get(`http://localhost:8000/api/profile/${userEmail}`);
+        const response = await axios.get(`${baseUrl}profile/${userEmail}`);
         const data = response.data;
         if (data && data.profile) {
           setProfile({
@@ -64,7 +66,7 @@ const ProfileEdit = () => {
 
     try {
       const username = profile.username;
-      const response = await axios.post(`http://localhost:8000/api/update_user/${username}/`, {
+      const response = await axios.post(`${baseUrl}update_user/${username}/`, {
         name: profile.name,
         email: profile.email,
         phoneNumber: profile.phoneNumber,

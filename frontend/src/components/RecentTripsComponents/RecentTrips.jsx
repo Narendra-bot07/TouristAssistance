@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const RecentTrips = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ const RecentTrips = () => {
   useEffect(() => {
     const fetchRecentPackages = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/recent-packages/${username}/`);
+        const response = await axios.get(`${baseUrl}recent-packages/${username}/`);
         if (response.data.status === 'success') {
           setPackages(response.data.recentPackages || []);
         } else {

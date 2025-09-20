@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaUtensils, FaWallet, FaPlane, FaMapSigns, FaGlobe } from 'react-icons/fa';
 import './CreateYourOwnPackage.css';
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const CreateYourOwnPackage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -87,7 +89,7 @@ const CreateYourOwnPackage = () => {
     try {
       setResponseState(responseStates.loading);
       setError('');
-      const response = await axios.post('http://localhost:8000/api/save_trip_package/', payload, {
+      const response = await axios.post(`${baseUrl}save_trip_package/`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
