@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; 
-import "./Header.css";
+import "./Header.css"; 
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,7 +20,7 @@ const Header = () => {
       setIsLoggedIn(true);
       setUsername(storedUsername);
       
-      axios.get(`http://localhost:8000/api/check-active-trips/${storedUsername}/`)
+      axios.get(`${baseUrl}check-active-trips/${storedUsername}/`)
         .then(response => {
           if (response.data?.hasActiveTrip) {
             setHasActiveTrip(true);

@@ -5,6 +5,9 @@ import { NavLink } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import "./Profile.css"
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -28,12 +31,12 @@ const Profile = () => {
     const fetchData = async () => {
       try {
         // Fetch profile data
-        const profileResponse = await axios.get(`http://localhost:8000/api/profile/${username}/`);
+        const profileResponse = await axios.get(`${baseUrl}profile/${username}/`);
         setProfile(profileResponse.data.profile);
 
         // Fetch trip stats
         setStatsLoading(true);
-        const statsResponse = await axios.get(`http://localhost:8000/api/trip-stats/${username}`);
+        const statsResponse = await axios.get(`${baseUrl}trip-stats/${username}`);
         if (statsResponse.data.status === 'success') {
           setTripStats(statsResponse.data.stats);
         }

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
 
@@ -35,7 +38,7 @@ const TripDetails = () => {
   useEffect(() => {
     const fetchPackage = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/package/${username}/${packageId}/`);
+        const response = await axios.get(`${baseUrl}package/${username}/${packageId}/`);
         if (response.data.status === 'success') {
           const packageDetails = response.data.package;
 

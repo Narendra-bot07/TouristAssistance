@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Button, Form, Alert } from 'react-bootstrap';
+import config from "../../config.js";
+
+const baseUrl = config.BASE_URL;
 
 const ChangePassword = ({ username }) => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -31,7 +34,7 @@ const ChangePassword = ({ username }) => {
 const username = localStorage.getItem('userName');
     try {
       const response = await axios.post(
-        `http://localhost:8000/api/change-password/${username}/`, 
+        `${baseUrl}change-password/${username}/`, 
         {
           currentPassword: currentPassword,
           newPassword: newPassword,
