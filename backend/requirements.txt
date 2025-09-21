@@ -5,12 +5,15 @@ googlemaps>=4.10.0
 google-generativeai>=0.3.2
 requests>=2.25.1
 django-cors-headers>=3.13.0
-setuptools
-wheel
-gunicorn
-agno
+setuptools>=67.0.0
+wheel>=0.38.0
+gunicorn>=20.1.0
+agno>=0.0.3
 spacy>=3.8.0
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz
-groq
+groq>=0.7.0
 python-dateutil>=2.8.2
-python-dotenv
+python-dotenv>=1.0.0
+psycopg2-binary>=2.9.9
+python-decouple>=3.8
+asgiref>=3.7.2
