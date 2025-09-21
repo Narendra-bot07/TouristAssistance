@@ -3,16 +3,16 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Card, Container, Row, Col, Alert, Spinner, Badge, Button } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FaHotel, FaUtensils, FaMapSigns, FaCheckCircle, FaPlane, 
-  FaGlobe, FaWallet, FaList, FaArrowRight, FaArrowLeft, 
-  FaRegCalendarAlt, FaPlusCircle 
+import {
+  FaHotel, FaUtensils, FaMapSigns, FaCheckCircle, FaPlane,
+  FaGlobe, FaWallet, FaList, FaArrowRight, FaArrowLeft,
+  FaRegCalendarAlt, FaPlusCircle
 } from 'react-icons/fa';
 import { GiPathDistance } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import './ItineraryViewer.css';
 
-const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk'; 
+const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk';
 
 const fetchUnsplashImage = async (query) => {
   try {
