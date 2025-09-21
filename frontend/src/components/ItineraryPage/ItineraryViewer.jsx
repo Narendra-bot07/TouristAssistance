@@ -11,9 +11,7 @@ import {
 import { GiPathDistance } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import './ItineraryViewer.css';
-import config from "../../config.js";
-
-const baseUrl = config.BASE_URL;
+import { API_URL } from '../../config.js';
 
 const UNSPLASH_ACCESS_KEY = '8Vu1oE8SBFC4zelEK_g8U37gGpPKhPP_yURVh00Gaqk';
 
@@ -53,7 +51,7 @@ const ItineraryViewer = () => {
           return;
         }
 
-        const response = await axios.get(`${baseUrl}get-latest-itinerary/${userEmail}`);
+        const response = await axios.get(`${API_URL}/get-latest-itinerary/${userEmail}`);
         const data = response.data;
 
         if (!data.itinerary || data.itinerary.length === 0) {

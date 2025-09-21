@@ -3,9 +3,9 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
-import config from "../../config.js";
 
-const baseUrl = config.BASE_URL;
+import { API_URL } from '../../config.js';
+
 
 const RecentTrips = () => {
   const [packages, setPackages] = useState([]);
@@ -18,7 +18,7 @@ const RecentTrips = () => {
   useEffect(() => {
     const fetchRecentPackages = async () => {
       try {
-        const response = await axios.get(`${baseUrl}recent-packages/${username}/`);
+        const response = await axios.get(`${API_URL}/recent-packages/${username}/`);
         if (response.data.status === 'success') {
           setPackages(response.data.recentPackages || []);
         } else {

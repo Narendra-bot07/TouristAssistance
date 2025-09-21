@@ -1,5 +1,2 @@
-const config = {
-  BASE_URL: "https://touristassistance-production.up.railway.app/api/",
-};
 
-export default config;
+export const API_URL = "https://touristassistance-1.onrender.com/api";

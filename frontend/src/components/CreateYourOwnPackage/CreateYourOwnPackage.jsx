@@ -6,9 +6,9 @@ import { Card, Container, Form, Button, Row, Col, Alert } from 'react-bootstrap'
 import { motion } from 'framer-motion';
 import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaUtensils, FaWallet, FaPlane, FaMapSigns, FaGlobe } from 'react-icons/fa';
 import './CreateYourOwnPackage.css';
-import config from "../../config.js";
 
-const baseUrl = config.BASE_URL;
+import { API_URL } from '../../config.js';
+
 
 
 const CreateYourOwnPackage = () => {
@@ -91,7 +91,7 @@ const CreateYourOwnPackage = () => {
     try {
       setResponseState(responseStates.loading);
       setError('');
-      const response = await axios.post(`${baseUrl}save_trip_package/`, payload, {
+      const response = await axios.post(`${API_URL}/save_trip_package/`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },

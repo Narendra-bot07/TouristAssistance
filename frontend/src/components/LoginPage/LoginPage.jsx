@@ -5,9 +5,8 @@ import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaFacebookF, FaTwitter, FaGoogle } from 'react-icons/fa';
 import axios from 'axios';
 import './LoginPage.css';
-import config from "../../config.js";
+import { API_URL } from '../../config';
 
-const baseUrl = config.BASE_URL;
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -31,7 +30,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await axios.post(`${baseUrl}login/`, formData, {
+      const response = await axios.post(`${API_URL}/login/`, formData, {
         headers: {
           'Content-Type': 'application/json',
         },
